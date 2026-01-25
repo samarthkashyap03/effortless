@@ -1,0 +1,226 @@
+/* Editor Core Styles - Notion-inspired */
+.ProseMirror {
+    @apply outline-none min-h-[430px] leading-[1.8] text-zinc-800 max-w-none px-16 py-10;
+    font-family: var(--editor-font-family, sans-serif);
+    font-size: var(--editor-font-size, 17px);
+    font-feature-settings: "liga" 1, "calt" 1;
+}
+
+.ProseMirror>*+* {
+    margin-top: 0.75em;
+}
+
+.ProseMirror p {
+    @apply my-0;
+}
+
+.ProseMirror p.is-empty::before {
+    content: attr(data-placeholder);
+    @apply text-zinc-300 float-left pointer-events-none h-0;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-zinc-300 float-left pointer-events-none h-0;
+}
+
+/* Headings - Clean, powerful hierarchy */
+.ProseMirror h1 {
+    @apply text-[2.5rem] font-bold mt-16 mb-4 tracking-[-0.02em] text-zinc-900 leading-tight;
+}
+
+.ProseMirror h1:first-child {
+    @apply mt-0;
+}
+
+.ProseMirror h2 {
+    @apply text-[1.75rem] font-semibold mt-12 mb-3 tracking-[-0.01em] text-zinc-900 leading-tight;
+}
+
+.ProseMirror h3 {
+    @apply text-xl font-semibold mt-8 mb-2 tracking-tight text-zinc-900 leading-snug;
+}
+
+/* Lists - Clean and readable */
+.ProseMirror ul {
+    @apply list-disc list-outside ml-6 my-4;
+}
+
+.ProseMirror ul li {
+    @apply pl-1 py-0.5;
+}
+
+.ProseMirror ul li::marker {
+    @apply text-zinc-400;
+}
+
+.ProseMirror ol {
+    @apply list-decimal list-outside ml-6 my-4;
+}
+
+.ProseMirror ol li {
+    @apply pl-1 py-0.5;
+}
+
+.ProseMirror ol li::marker {
+    @apply text-zinc-500 font-medium;
+}
+
+/* Task Lists - Modern checkboxes */
+ul[data-type="taskList"] {
+    @apply list-none ml-0 p-0 my-4;
+}
+
+li[data-type="taskItem"] {
+    @apply flex items-start gap-3 py-1;
+}
+
+li[data-type="taskItem"] input[type="checkbox"] {
+    @apply mt-1.5 h-[18px] w-[18px] shrink-0 rounded-md border-2 border-zinc-300 appearance-none cursor-pointer transition-all duration-200 hover:border-zinc-400;
+    position: relative;
+}
+
+li[data-type="taskItem"] input[type="checkbox"]:checked {
+    @apply bg-blue-500 border-blue-500;
+}
+
+li[data-type="taskItem"] input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+li[data-type="taskItem"][data-checked="true"]>div {
+    @apply text-zinc-400 line-through;
+}
+
+li[data-type="taskItem"]>div {
+    @apply flex-1 transition-colors;
+}
+
+/* Callout / Tip Box - Modern cards */
+.callout {
+    @apply flex items-start gap-4 p-5 my-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100;
+}
+
+.callout-icon {
+    @apply text-xl flex-shrink-0 select-none;
+}
+
+.callout-content {
+    @apply flex-1 min-w-0 text-[15px] text-zinc-700;
+}
+
+/* Blockquote - Elegant pull quotes */
+.ProseMirror blockquote {
+    @apply border-l-[3px] border-zinc-300 pl-5 py-1 my-6 text-lg text-zinc-500 italic;
+}
+
+.ProseMirror blockquote p {
+    @apply my-0;
+}
+
+/* Code Blocks - Clean, modern */
+.ProseMirror pre {
+    @apply bg-zinc-900 text-zinc-100 p-5 rounded-xl font-mono text-sm my-6 overflow-x-auto;
+}
+
+.ProseMirror code {
+    @apply bg-zinc-100 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[0.9em];
+}
+
+.ProseMirror pre code {
+    @apply bg-transparent text-inherit p-0;
+}
+
+/* Horizontal Rule */
+.ProseMirror hr {
+    @apply border-none h-px bg-zinc-200 my-8;
+}
+
+/* Images - Clean with subtle shadow */
+.ProseMirror img {
+    @apply rounded-xl shadow-lg my-8 max-h-[500px] object-cover mx-auto transition-all duration-300 hover:shadow-xl;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+    @apply ring-2 ring-blue-500 ring-offset-4;
+}
+
+/* Links */
+.ProseMirror a {
+    @apply text-blue-600 underline underline-offset-2 decoration-blue-300 hover:decoration-blue-500 transition-colors;
+}
+
+/* Highlight */
+.ProseMirror mark {
+    @apply bg-yellow-200 text-inherit rounded-sm px-0.5;
+}
+
+/* Layout Grid for "Features" section simulation */
+.features-grid {
+    @apply grid md:grid-cols-2 gap-8 my-8;
+}
+
+.feature-card {
+    @apply p-6 rounded-xl border border-zinc-200 bg-zinc-50/50 transition-all hover:bg-zinc-50 hover:shadow-sm;
+}
+
+/* Selection - Soft blue */
+.ProseMirror ::selection {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* Cursor blink */
+.ProseMirror .ProseMirror-cursor {
+    @apply border-l-2 border-zinc-900;
+}
+
+/* Focus ring on editor when focused */
+.ProseMirror:focus {
+    @apply outline-none;
+}
+
+/* Placeholder styling for headings */
+.ProseMirror h1.is-empty::before,
+.ProseMirror h2.is-empty::before,
+.ProseMirror h3.is-empty::before {
+    content: attr(data-placeholder);
+    @apply text-zinc-300 float-left pointer-events-none h-0;
+}
+
+/* Sleek Fading Scrollbar */
+.toolbar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease-in-out;
+}
+
+.toolbar-scrollbar:hover {
+    scrollbar-color: rgba(161, 161, 170, 0.5) transparent;
+}
+
+.toolbar-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.toolbar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.toolbar-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.toolbar-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(161, 161, 170, 0.5);
+}

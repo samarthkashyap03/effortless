@@ -1,0 +1,250 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark Futuristic Design System - Effortless Landing Page
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Dark futuristic palette - force dark mode as default */
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 192 95% 55%;
+    --primary-foreground: 222 47% 5%;
+
+    --secondary: 270 60% 55%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 20% 60%;
+
+    --accent: 192 95% 55%;
+    --accent-foreground: 222 47% 5%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 192 95% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens for landing page */
+    --glow-cyan: 192 95% 55%;
+    --glow-purple: 270 60% 55%;
+    --glow-blue: 217 91% 60%;
+    --glass-bg: 222 47% 8%;
+    --glass-border: 222 30% 25%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 192 95% 55%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 222 30% 15%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 30% 18%;
+    --sidebar-ring: 192 95% 55%;
+  }
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 192 95% 55%;
+    --primary-foreground: 222 47% 5%;
+
+    --secondary: 270 60% 55%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 20% 60%;
+
+    --accent: 192 95% 55%;
+    --accent-foreground: 222 47% 5%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 192 95% 55%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 192 95% 55%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 222 30% 15%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 30% 18%;
+    --sidebar-ring: 192 95% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+
+  /* Glassmorphic card effect */
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-glass-border rounded-xl;
+  }
+
+  /* Glow effects */
+  .glow-cyan {
+    box-shadow: 0 0 20px hsl(var(--glow-cyan) / 0.3),
+      0 0 40px hsl(var(--glow-cyan) / 0.2),
+      0 0 60px hsl(var(--glow-cyan) / 0.1);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px hsl(var(--glow-purple) / 0.3),
+      0 0 40px hsl(var(--glow-purple) / 0.2),
+      0 0 60px hsl(var(--glow-purple) / 0.1);
+  }
+
+  .glow-border {
+    @apply relative;
+  }
+
+  .glow-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl;
+    background: linear-gradient(135deg, hsl(var(--glow-cyan) / 0.5), hsl(var(--glow-purple) / 0.5));
+    filter: blur(20px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .glow-border:hover::before {
+    opacity: 1;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--glow-cyan)), hsl(var(--glow-purple)));
+  }
+
+  /* Gradient backgrounds */
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--glow-cyan) / 0.1), hsl(var(--glow-purple) / 0.1));
+  }
+
+  .gradient-border {
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+      linear-gradient(135deg, hsl(var(--glow-cyan)), hsl(var(--glow-purple))) border-box;
+    border: 1px solid transparent;
+  }
+
+  /* Button glow on hover */
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 30px hsl(var(--glow-cyan) / 0.5),
+      0 0 60px hsl(var(--glow-cyan) / 0.3);
+  }
+
+  /* Animated underline for links */
+  .link-underline {
+    @apply relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 scale-x-0 origin-right transition-transform duration-300;
+    background: linear-gradient(90deg, hsl(var(--glow-cyan)), hsl(var(--glow-purple)));
+  }
+
+  .link-underline:hover::after {
+    @apply scale-x-100 origin-left;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0mm;
+  }
+
+  body {
+    visibility: hidden;
+    background-color: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset dark mode variables for print */
+  :root {
+    --background: 0 0% 100% !important;
+    --foreground: 0 0% 0% !important;
+  }
+
+  #certificate-container {
+    visibility: visible;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    /* A4 width */
+    height: 297mm;
+    /* A4 height */
+    margin: 0 auto;
+    padding: 0 !important;
+    /* Let the component handle internal padding via Tailwind classes */
+    background-color: white !important;
+    color: black !important;
+    z-index: 9999;
+    overflow: hidden;
+    /* Ensure content fits */
+    display: flex !important;
+    /* KEEP FLEX LAYOUT */
+    flex-direction: column !important;
+  }
+
+  /* Force background colors on certificate elements */
+  #certificate-container * {
+    visibility: visible;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide everything else explicitly */
+  nav,
+  footer,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+}
