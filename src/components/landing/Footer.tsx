@@ -38,7 +38,13 @@ export const Footer = () => {
                 {links.map((link) => (
                   <li key={link}>
                     <a
-                      href={link === 'Privacy Policy' ? '/privacy' : '#'}
+                      href={
+                        link === 'Privacy Policy' ? '/privacy' :
+                          link === 'Help Center' ? '/faq' :
+                            link === 'Features' ? '/#features' :
+                              link === 'Contact Us' ? '#' :
+                                '#'
+                      }
                       className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline"
                     >
                       {link}
