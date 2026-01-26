@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
     EditorContent,
     useEditor,
     type Editor as EditorInstance,
 } from "@tiptap/react";
-import { useRef, useEffect } from "react";
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -42,6 +41,12 @@ import {
     AlignLeft,
     ChevronDown,
 } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import "./editor.css";
 
 // Slash Command Menu Item
@@ -159,6 +164,7 @@ interface EditorProps {
     content: string;
     onChange: (content: string) => void;
     editable?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTransaction?: (transaction: any) => void;
     fontFamily?: string;
     onFontChange?: (font: string) => void;
@@ -188,9 +194,6 @@ export default function Editor({ content, onChange, editable = true, onTransacti
     const [showSlashMenu, _setShowSlashMenu] = useState(false);
     const [slashMenuQuery, _setSlashMenuQuery] = useState("");
     const [selectedCommandIndex, _setSelectedCommandIndex] = useState(0);
-    const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
-    const [isSizeMenuOpen, setIsSizeMenuOpen] = useState(false);
-
 
     // Refs to keep track of state inside the non-updating editor callbacks
     const slashMenuState = useRef({
@@ -372,7 +375,6 @@ export default function Editor({ content, onChange, editable = true, onTransacti
         [editor, filteredCommands, slashMenuQuery]
     );
 
-    // update ref
     useEffect(() => {
         executeCommandRef.current = executeCommand;
     }, [executeCommand]);
@@ -431,96 +433,56 @@ export default function Editor({ content, onChange, editable = true, onTransacti
                     </ToolbarButton>
                 </div>
 
-                {/* Font & Size Selector */}
+                {/* Font & Size Selector with Shadcn Dropdown to prevent clipping */}
                 {(onFontChange || onFontSizeChange) && (
                     <div className="flex items-center gap-1 pr-2 mr-2 border-r border-zinc-200">
                         {onFontChange && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsFontMenuOpen(!isFontMenuOpen)}
-                                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition-colors w-28 border border-zinc-200"
-                                >
-                                    <span className="truncate flex-1 text-left">{currentFontName}</span>
-                                    <ChevronDown className="w-3 h-3 text-zinc-400" />
-                                </button>
-
-                                <AnimatePresence>
-                                    {isFontMenuOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-30"
-                                                onClick={() => setIsFontMenuOpen(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 5 }}
-                                                className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-zinc-100 p-1 z-40"
-                                            >
-                                                {FONT_OPTIONS.map((font) => (
-                                                    <button
-                                                        key={font.name}
-                                                        onClick={() => {
-                                                            onFontChange(font.value);
-                                                            setIsFontMenuOpen(false);
-                                                        }}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between
-                                                            ${fontFamily === font.value ? "bg-zinc-100 text-zinc-900 font-medium" : "text-zinc-600 hover:bg-zinc-50"}
-                                                        `}
-                                                        style={{ fontFamily: font.value }}
-                                                    >
-                                                        {font.name}
-                                                    </button>
-                                                ))}
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition-colors w-28 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-100"
+                                    >
+                                        <span className="truncate flex-1 text-left">{currentFontName}</span>
+                                        <ChevronDown className="w-3 h-3 text-zinc-400" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-48 max-h-60 overflow-y-auto z-[60]">
+                                    {FONT_OPTIONS.map((font) => (
+                                        <DropdownMenuItem
+                                            key={font.name}
+                                            onClick={() => onFontChange(font.value)}
+                                            className={`gap-2 cursor-pointer ${fontFamily === font.value ? "bg-zinc-100 font-medium" : ""}`}
+                                            style={{ fontFamily: font.value }}
+                                        >
+                                            {font.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )}
 
                         {onFontSizeChange && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsSizeMenuOpen(!isSizeMenuOpen)}
-                                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition-colors w-20 border border-zinc-200"
-                                >
-                                    <span className="truncate flex-1 text-left">{currentSizeName}</span>
-                                    <ChevronDown className="w-3 h-3 text-zinc-400" />
-                                </button>
-
-                                <AnimatePresence>
-                                    {isSizeMenuOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-30"
-                                                onClick={() => setIsSizeMenuOpen(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 5 }}
-                                                className="absolute top-full left-0 mt-1 w-32 bg-white rounded-lg shadow-xl border border-zinc-100 p-1 z-40"
-                                            >
-                                                {SIZE_OPTIONS.map((size) => (
-                                                    <button
-                                                        key={size.name}
-                                                        onClick={() => {
-                                                            onFontSizeChange(size.value);
-                                                            setIsSizeMenuOpen(false);
-                                                        }}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between
-                                                            ${fontSize === size.value ? "bg-zinc-100 text-zinc-900 font-medium" : "text-zinc-600 hover:bg-zinc-50"}
-                                                        `}
-                                                    >
-                                                        {size.name}
-                                                    </button>
-                                                ))}
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition-colors w-20 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-100"
+                                    >
+                                        <span className="truncate flex-1 text-left">{currentSizeName}</span>
+                                        <ChevronDown className="w-3 h-3 text-zinc-400" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-32 z-[60]">
+                                    {SIZE_OPTIONS.map((size) => (
+                                        <DropdownMenuItem
+                                            key={size.name}
+                                            onClick={() => onFontSizeChange(size.value)}
+                                            className={`cursor-pointer ${fontSize === size.value ? "bg-zinc-100 font-medium" : ""}`}
+                                        >
+                                            {size.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )}
                     </div>
                 )}
@@ -624,7 +586,7 @@ export default function Editor({ content, onChange, editable = true, onTransacti
 
             {/* Bubble Menu - Appears on Selection */}
             <BubbleMenu
-                className="flex items-center gap-1 p-1.5 rounded-xl bg-zinc-900 shadow-2xl border border-zinc-700"
+                className="flex items-center gap-1 p-1.5 rounded-xl bg-zinc-900 shadow-2xl border border-zinc-700 z-50"
                 editor={editor}
             >
                 <button
@@ -668,7 +630,7 @@ export default function Editor({ content, onChange, editable = true, onTransacti
 
             {/* Floating Menu - Shows on empty lines */}
             <FloatingMenu
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 z-50"
                 editor={editor}
             >
                 <motion.div
@@ -714,7 +676,7 @@ export default function Editor({ content, onChange, editable = true, onTransacti
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute left-12 top-20 z-50 w-72 bg-white rounded-xl shadow-2xl border border-zinc-200 overflow-hidden"
+                        className="absolute left-12 top-20 z-[100] w-72 bg-white rounded-xl shadow-2xl border border-zinc-200 overflow-hidden"
                     >
                         <div className="p-2 border-b border-zinc-100">
                             <div className="flex items-center gap-2 px-2 py-1 text-xs text-zinc-400">

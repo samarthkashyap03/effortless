@@ -25,10 +25,10 @@ export default function VerificationGuide() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 mb-6"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-6"
                         >
-                            <AlertCircle className="w-4 h-4 text-yellow-500" />
-                            <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">In-house tool coming soon</span>
+                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                            <a href="/verify" className="text-xs font-semibold text-emerald-500 uppercase tracking-wide hover:underline">New Tool Available</a>
                         </motion.div>
 
                         <motion.h1
@@ -123,7 +123,7 @@ export default function VerificationGuide() {
                     </div>
 
                     <div className="text-center text-zinc-500 text-sm max-w-lg mx-auto">
-                        <p>Our dedicated verification tool is in development and will allow drag-and-drop verification directly in the browser.</p>
+                        <p>Our dedicated verification tool is now available. <a href="/verify" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4">Try the Verification Tool</a> directly in your browser.</p>
                     </div>
 
                 </div>

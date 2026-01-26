@@ -35,6 +35,7 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
 
 
+          <Route path="/verify" element={<Verify />} />
           <Route path="/verify/:token" element={<Verify />} />
           <Route path="/verify-guide" element={<VerificationGuide />} />
 
