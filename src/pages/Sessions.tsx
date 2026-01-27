@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Loader2, FileText, Code, LogOut, ChevronRight, Sparkles, Clock, Calendar, Shield, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, FileText, Code, LogOut, ChevronRight, ChevronDown, Sparkles, Clock, Calendar, Shield, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -31,13 +31,18 @@ export default function Sessions() {
     const { toast } = useToast();
     const [sessions, setSessions] = useState<Session[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [userName, setUserName] = useState("");
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+
+    const PAGE_SIZE = 3;
 
     useEffect(() => {
         checkUser();
-        fetchSessions();
+        fetchSessions(0, true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -50,18 +55,35 @@ export default function Sessions() {
         setUserName(user.user_metadata.full_name || "User");
     };
 
-    const fetchSessions = async () => {
+    const fetchSessions = async (pageIndex: number, isInitialLoad: boolean = false) => {
         try {
+            if (isInitialLoad) {
+                setIsLoading(true);
+            } else {
+                setIsLoadingMore(true);
+            }
+
+            const from = pageIndex * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
             const { data: sessionsData, error: sessionsError } = await supabase
                 .from("sessions")
                 .select("*")
-                .order("started_at", { ascending: false });
+                .order("started_at", { ascending: false })
+                .range(from, to);
 
             if (sessionsError) throw sessionsError;
 
             if (!sessionsData || sessionsData.length === 0) {
-                setSessions([]);
+                if (isInitialLoad) setSessions([]);
+                setHasMore(false);
                 return;
+            }
+
+            if (sessionsData.length < PAGE_SIZE) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
             }
 
             const sessionIds = sessionsData.map(s => s.id);
@@ -74,7 +96,7 @@ export default function Sessions() {
                 console.warn("Could not fetch reports:", reportsError);
             }
 
-            const sessionsWithReports = sessionsData.map(session => {
+            const newSessions = sessionsData.map(session => {
                 const report = reportsData?.find(r => r.session_id === session.id);
                 return {
                     ...session,
@@ -82,7 +104,13 @@ export default function Sessions() {
                 };
             });
 
-            setSessions(sessionsWithReports);
+            if (isInitialLoad) {
+                setSessions(newSessions);
+                setPage(0);
+            } else {
+                setSessions(prev => [...prev, ...newSessions]);
+            }
+
         } catch (error) {
             console.error("Error fetching sessions:", error);
             toast({
@@ -92,7 +120,14 @@ export default function Sessions() {
             });
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
         }
+    };
+
+    const handleLoadMore = () => {
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchSessions(nextPage, false);
     };
 
     const handleCreateSession = () => {
@@ -183,7 +218,7 @@ export default function Sessions() {
                             View and manage your verification reports.
                         </p>
                         <p className="text-sm text-muted-foreground/60 mt-1">
-                            {sessions.length} {sessions.length === 1 ? 'session' : 'sessions'} created
+                            {sessions.length} {sessions.length === 1 ? 'session' : 'sessions'} visible
                         </p>
                     </div>
 
@@ -371,6 +406,33 @@ export default function Sessions() {
                                     </motion.div>
                                 );
                             })}
+
+                            {hasMore && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex justify-center mt-6"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleLoadMore}
+                                        disabled={isLoadingMore}
+                                        className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-zinc-400 hover:text-white transition-all duration-300 min-w-[140px]"
+                                    >
+                                        {isLoadingMore ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Loading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                View More
+                                                <ChevronDown className="h-4 w-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </motion.div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
