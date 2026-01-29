@@ -116,6 +116,21 @@ function OfflineVerificationTool() {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const page = await pdf.getPage(1);
+
+        // Attempt direct text extraction (better for digital PDFs)
+        try {
+            const textContent = await page.getTextContent();
+            const directText = textContent.items.map((item: any) => item.str).join(' ');
+            // If we got a reasonable amount of text, return it
+            if (directText.length > 50) {
+                console.log("Used direct PDF text extraction");
+                return directText;
+            }
+        } catch (err) {
+            console.warn("Direct PDF text extraction failed:", err);
+        }
+
+        // Fallback to OCR (for scanned documents)
         const viewport = page.getViewport({ scale: 2.0 });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
@@ -180,9 +195,13 @@ function OfflineVerificationTool() {
             const cleanTextForKeyword = text.replace(/\s+/g, ' ').toLowerCase();
             const hasEffortless = cleanTextForKeyword.includes("effortless");
 
-            const candidates = text.match(/[a-fA-F0-9OIlZSG]{10,}/g) || [];
-            const potentialHexStream = candidates.join('').toUpperCase()
+            const candidates = text.match(/[a-fA-F0-9OIlZSG]{5,}/g) || [];
+            const stream1 = candidates.join('').toUpperCase()
                 .replace(/O/g, '0').replace(/[Il]/g, '1').replace(/Z/g, '2').replace(/S/g, '5').replace(/G/g, '6');
+
+            const stream2 = text.replace(/[^a-fA-F0-9]/gi, '').toUpperCase();
+
+            const potentialHexStream = stream1 + "|||" + stream2;
 
             const targetHash = docHash.toUpperCase();
             let matchType: 'exact' | 'fuzzy' | 'none' = 'none';
