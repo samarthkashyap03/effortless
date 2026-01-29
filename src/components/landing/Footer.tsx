@@ -28,6 +28,9 @@ export const Footer = () => {
             <p className="text-muted-foreground text-sm leading-relaxed">
               Support your work’s authenticity with privacy-first verification.
             </p>
+            <p className="text-muted-foreground/60 text-xs mt-4 leading-relaxed">
+              Effortless is currently in early access. Paid plans will be introduced based on usage and feedback.
+            </p>
           </div>
 
           {/* Links */}
@@ -42,9 +45,15 @@ export const Footer = () => {
                         link === 'Privacy Policy' ? '/privacy' :
                           link === 'Help Center' ? '/faq' :
                             link === 'Features' ? '/#features' :
-                              link === 'Contact Us' ? '#' :
-                                '#'
+                              link === 'Pricing' ? '/pricing' :
+                                link === 'About' ? '/about' :
+                                  link === 'Contact Us' ? '#' :
+                                    link === 'GitHub' ? 'https://github.com/samarthkashyap03' :
+                                      link === 'LinkedIn' ? 'https://www.linkedin.com/in/samarthkashyap/' :
+                                        '#'
                       }
+                      target={link === 'GitHub' || link === 'LinkedIn' ? '_blank' : '_self'}
+                      rel={link === 'GitHub' || link === 'LinkedIn' ? 'noopener noreferrer' : ''}
                       className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline"
                     >
                       {link}

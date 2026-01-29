@@ -16,6 +16,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FAQ from "./pages/FAQ";
 import { PrivacyProtector } from "./components/PrivacyProtector";
 import VerificationGuide from "./pages/VerificationGuide";
+import About from "./pages/About";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/implementation" element={<Implementation />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
 
 
           <Route path="/verify" element={<Verify />} />

@@ -7,9 +7,16 @@ import { CTASection } from '@/components/landing/CTASection';
 import { VerificationTeaser } from '@/components/landing/VerificationTeaser';
 import { Footer } from '@/components/landing/Footer';
 
+import { SEO } from '@/components/SEO';
+
 const Index = () => {
   return (
-    <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a0a] text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100">
+      <SEO
+        title="Effortless - Authentic Verification"
+        description="Verify the authenticity of your work with privacy-first proof-of-process technology. Created by Samarth Kashyap."
+        keywords={['Authenticity', 'Verification', 'Proof of Process']}
+      />
       <Navbar />
       <HeroSection />
       <FeaturesSection />
@@ -18,7 +25,7 @@ const Index = () => {
       <VerificationTeaser />
       <CTASection />
       <Footer />
-    </main>
+    </div>
   );
 };
 

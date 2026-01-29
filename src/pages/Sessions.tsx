@@ -515,6 +515,12 @@ export default function Sessions() {
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <div className="text-center py-6 relative z-10">
+                <p className="text-zinc-600 text-xs text-muted-foreground/50">
+                    Effortless is currently in early access. Paid plans will be introduced based on usage and feedback.
+                </p>
+            </div>
         </div>
     );
 }

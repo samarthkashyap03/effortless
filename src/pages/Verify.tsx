@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/landing/Navbar";
+import { SEO } from "@/components/SEO";
 import Tesseract from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -248,8 +250,13 @@ function OfflineVerificationTool() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white selection:bg-cyan-500/30 font-sans relative overflow-hidden flex flex-col items-center">
-
+        <div className="min-h-screen bg-[#0a0a0a] text-foreground overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100">
+            <SEO
+                title="Verify Certificate"
+                description="Verify the authenticity of an Effortless certificate. Upload your document to check its proof-of-process."
+                keywords={['Verify', 'Certificate', 'Check', 'Validation', 'Authenticity']}
+            />
+            <Navbar />
             {/* Subtle Lighting */}
             <div className={`fixed inset-0 transition-opacity duration-1000 pointer-events-none ${verificationStatus === 'success' ? 'opacity-100' : 'opacity-30'}`}>
                 <div className={`absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] transition-colors duration-1000 ${verificationStatus === 'success' ? 'bg-emerald-500/20' : 'bg-cyan-500/10'}`} />

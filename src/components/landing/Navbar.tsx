@@ -20,10 +20,12 @@ export const Navbar = () => {
 
   const navLinks = [
     { href: '#features', label: 'Features' },
+    { href: '/pricing', label: 'Pricing' },
     { href: '/implementation', label: 'Implementation' },
     { href: '#how-it-works', label: 'How It Works' },
     { href: '/faq', label: 'FAQ' },
     { href: '/verify-guide', label: 'Verify Certificate' },
+    { href: '/about', label: 'About' },
     { href: '#security', label: 'Privacy' },
   ];
 
