@@ -14,7 +14,7 @@ const emailSchema = z.string().trim().email({ message: "Please enter a valid ema
 const passwordSchema = z.string().min(8, { message: "Password must be at least 8 characters" });
 const nameSchema = z.string().trim().min(2, { message: "Name must be at least 2 characters" });
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'forgot-password' | 'update-password';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -40,6 +40,25 @@ export default function Auth() {
     email: '',
     password: '',
   });
+
+  // Check for password recovery flow
+  useEffect(() => {
+    // 1. Check for explicit query param from our custom link
+    if (searchParams.get('mode') === 'reset_callback') {
+      setMode('update-password');
+    }
+
+    // 2. Listen for Supabase auth state change (PASSWORD_RECOVERY event)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('update-password');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [searchParams]);
 
   const validateField = (field: string, value: string) => {
     try {
@@ -77,7 +96,78 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate all fields
+    // 1. Update Password Flow
+    if (mode === 'update-password') {
+      const passwordError = validateField('password', formData.password);
+      if (passwordError) {
+        setErrors(prev => ({ ...prev, password: passwordError }));
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const { error } = await supabase.auth.updateUser({
+          password: formData.password
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Password Updated",
+          description: "Your password has been changed successfully.",
+        });
+
+        // Redirect to home/sessions after success
+        setTimeout(() => navigate('/sessions'), 1500);
+
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to update password.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // 2. Forgot Password Flow
+    if (mode === 'forgot-password') {
+      const emailError = validateField('email', formData.email);
+      if (emailError) {
+        setErrors(prev => ({ ...prev, email: emailError }));
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+          redirectTo: window.location.origin + '/auth?mode=reset_callback',
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Check your inbox",
+          description: "We've sent you a password reset link.",
+        });
+
+        // Return to sign in after a delay
+        setTimeout(() => setMode('signin'), 2000);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to send reset email.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // 3. Sign In / Sign Up Flow
     const newErrors = {
       name: mode === 'signup' ? validateField('name', formData.name) : '',
       email: validateField('email', formData.email),
@@ -86,7 +176,6 @@ export default function Auth() {
 
     setErrors(newErrors);
 
-    // Check if there are any errors
     if (Object.values(newErrors).some(error => error !== '')) {
       return;
     }
@@ -112,10 +201,9 @@ export default function Auth() {
           description: "Please sign in with your new account.",
         });
 
-        // Switch to sign in mode as per requirement
         setTimeout(() => {
           setMode('signin');
-          setFormData(prev => ({ ...prev, password: '' })); // clear password
+          setFormData(prev => ({ ...prev, password: '' }));
         }, 1000);
 
       } else {
@@ -131,12 +219,10 @@ export default function Auth() {
           description: "Welcome back to Effortless.",
         });
 
-        // Navigate to home after successful auth
         setTimeout(() => {
           navigate('/sessions');
         }, 1000);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -149,10 +235,28 @@ export default function Auth() {
   };
 
   const toggleMode = () => {
-    setMode(mode === 'signin' ? 'signup' : 'signin');
+    if (mode === 'forgot-password' || mode === 'update-password') {
+      setMode('signin');
+    } else {
+      setMode(mode === 'signin' ? 'signup' : 'signin');
+    }
     setErrors({ name: '', email: '', password: '' });
-    setFormData({ name: '', email: '', password: '' });
+    setFormData(prev => ({ ...prev, password: '' }));
   };
+
+  const getTitle = () => {
+    if (mode === 'update-password') return 'Set New Password';
+    if (mode === 'forgot-password') return 'Reset Password';
+    if (mode === 'signin') return 'Welcome Back';
+    return 'Create Account';
+  }
+
+  const getDescription = () => {
+    if (mode === 'update-password') return 'Enter your new password below';
+    if (mode === 'forgot-password') return 'Enter your email to receive a reset link';
+    if (mode === 'signin') return 'Sign in to access your Dashboard';
+    return 'Start Verifying Your Work';
+  }
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
@@ -195,12 +299,10 @@ export default function Auth() {
               <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">Effortless</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
-              {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+              {getTitle()}
             </h1>
             <p className="text-zinc-400 text-sm">
-              {mode === 'signin'
-                ? 'Sign in to access your Dashboard'
-                : 'Start Verifying Your Work'}
+              {getDescription()}
             </p>
           </div>
 
@@ -233,58 +335,63 @@ export default function Auth() {
               </motion.div>
             )}
 
-            {/* Email field */}
-            <div className="space-y-2">
-              <div className="relative group">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@email.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  onBlur={(e) => handleBlur('email', e.target.value)}
-                  className={`h-11 pl-10 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-900 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500/50' : ''
-                    }`}
-                />
+            {/* Email field - show everywhere except when we only need password */}
+            {(mode === 'signup' || mode === 'signin' || mode === 'forgot-password') && (
+              <div className="space-y-2">
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@email.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onBlur={(e) => handleBlur('email', e.target.value)}
+                    className={`h-11 pl-10 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-900 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500/50' : ''
+                      }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-400 text-xs pl-1">{errors.email}</p>
+                )}
               </div>
-              {errors.email && (
-                <p className="text-red-400 text-xs pl-1">{errors.email}</p>
-              )}
-            </div>
+            )}
 
-            {/* Password field */}
-            <div className="space-y-2">
-              <div className="relative group">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  onBlur={(e) => handleBlur('password', e.target.value)}
-                  className={`h-11 pl-10 pr-10 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-900 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500/50' : ''
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            {/* Password field - hide for forgot-password */}
+            {(mode === 'signup' || mode === 'signin' || mode === 'update-password') && (
+              <div className="space-y-2">
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={mode === 'update-password' ? 'New Password' : 'Password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    onBlur={(e) => handleBlur('password', e.target.value)}
+                    className={`h-11 pl-10 pr-10 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-900 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500/50' : ''
+                      }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-400 text-xs pl-1">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-red-400 text-xs pl-1">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             {/* Forgot password link - only for signin */}
             {mode === 'signin' && (
               <div className="text-right">
                 <button
                   type="button"
+                  onClick={() => setMode('forgot-password')}
                   className="text-xs text-zinc-400 hover:text-white transition-colors"
                 >
                   Forgot password?
@@ -308,32 +415,50 @@ export default function Auth() {
                   <span>Processing...</span>
                 </div>
               ) : (
-                mode === 'signin' ? 'Sign In' : 'Create Account'
+                mode === 'forgot-password' ? 'Send Reset Link' :
+                  mode === 'update-password' ? 'Update Password' :
+                    (mode === 'signin' ? 'Sign In' : 'Create Account')
               )}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-wider">
-              <span className="px-4 bg-[#0a0a0a]/80 text-zinc-500">or continue with</span>
-            </div>
-          </div>
+          {/* Divider and Toggle */}
+          {mode !== 'forgot-password' && mode !== 'update-password' && (
+            <>
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-800" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="px-4 bg-[#0a0a0a]/80 text-zinc-500">or continue with</span>
+                </div>
+              </div>
 
-          {/* Toggle mode */}
-          <p className="text-center text-zinc-400 text-sm">
-            {mode === 'signin' ? "New here?" : "Already member?"}
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="ml-2 text-cyan-400 hover:text-cyan-300 font-medium transition-colors hover:underline underline-offset-4"
-            >
-              {mode === 'signin' ? 'Create an account' : 'Sign in'}
-            </button>
-          </p>
+              <p className="text-center text-zinc-400 text-sm">
+                {mode === 'signin' ? "New here?" : "Already member?"}
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  className="ml-2 text-cyan-400 hover:text-cyan-300 font-medium transition-colors hover:underline underline-offset-4"
+                >
+                  {mode === 'signin' ? 'Create an account' : 'Sign in'}
+                </button>
+              </p>
+            </>
+          )}
+
+          {/* Back to sign in for forgot password mode */}
+          {(mode === 'forgot-password' || mode === 'update-password') && (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setMode('signin')}
+                className="text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                <span className="text-cyan-400 hover:underline">Return to Sign in</span>
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
