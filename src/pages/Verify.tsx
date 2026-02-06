@@ -257,13 +257,14 @@ function OfflineVerificationTool() {
                 keywords={['Verify', 'Certificate', 'Check', 'Validation', 'Authenticity']}
             />
             <Navbar />
-            {/* Subtle Lighting */}
-            <div className={`fixed inset-0 transition-opacity duration-1000 pointer-events-none ${verificationStatus === 'success' ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] transition-colors duration-1000 ${verificationStatus === 'success' ? 'bg-emerald-500/20' : 'bg-cyan-500/10'}`} />
-                <div className={`absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] transition-colors duration-1000 ${verificationStatus === 'success' ? 'bg-emerald-500/10' : 'bg-blue-600/10'}`} />
+            {/* Subtle Lighting - Enhanced to match About page */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className={`absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] transition-colors duration-1000 ${verificationStatus === 'success' ? 'bg-emerald-500/10' : 'bg-cyan-500/10'} opacity-60`} />
+                <div className={`absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] transition-colors duration-1000 ${verificationStatus === 'success' ? 'bg-emerald-500/10' : 'bg-purple-600/10'} opacity-50`} />
+                <div className="absolute top-[20%] right-[20%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[80px] mix-blend-screen opacity-30 animate-pulse-slow" />
             </div>
 
-            <div className="w-full max-w-5xl relative z-10 px-6 py-12 flex flex-col items-center">
+            <div className="w-full max-w-5xl mx-auto relative z-10 px-6 pt-32 pb-20 flex flex-col items-center">
 
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -274,9 +275,9 @@ function OfflineVerificationTool() {
                         <ArrowLeft className="w-6 h-6" />
                     </a>
 
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-6 backdrop-blur-sm">
-                        <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                        <span className="text-xs font-medium text-zinc-300 tracking-wide">Client-Side Verification</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-md mb-6">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <span className="text-xs font-medium text-cyan-200 tracking-wide uppercase">Client-Side Verification</span>
                     </div>
                     <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
                         Verify Authenticity
@@ -462,14 +463,18 @@ function DropZone({
 
     return (
         <div
-            className={`relative group cursor-pointer border border-white/10 bg-zinc-900/40 backdrop-blur-sm rounded-2xl h-[280px] transition-all duration-500
-                ${isDragging ? `scale-[1.02] border-${color}-500 bg-${color}-500/10` : 'hover:bg-zinc-900/60'}
-                ${file ? `border-${color}-500/30 bg-${color}-500/5` : errorCheckingBorder(borderColor)}`}
+            className={`relative group cursor-pointer border rounded-[2rem] h-[320px] transition-all duration-500 overflow-hidden
+                ${isDragging || file
+                    ? `border-${color}-500/50 bg-${color}-500/5`
+                    : `border-white/5 bg-[#0f0f12] hover:border-${color}-500/30 hover:shadow-2xl hover:shadow-${color}-500/10 hover:-translate-y-1`
+                }
+                ${errorCheckingBorder(borderColor)}`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => { setIsDragging(false); onDrop(e); }}
             onClick={() => !file && document.getElementById(`file-${color}`)?.click()}
         >
+            <div className={`absolute inset-0 bg-gradient-to-br from-${color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
             <input
                 id={`file-${color}`}
                 type="file"

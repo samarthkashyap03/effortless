@@ -54,6 +54,18 @@ export default function Certificate() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId]);
 
+    useEffect(() => {
+        if (session) {
+            const date = new Date();
+            // Format: YYYY-MM-DD-HH-mm-ss
+            const timestamp = date.toISOString().replace(/T/, '-').replace(/\..+/, '').replace(/:/g, '-');
+            document.title = `effortless-certificate-${timestamp}`;
+        }
+        return () => {
+            document.title = "Effortless - SaaS";
+        };
+    }, [session]);
+
     const fetchSession = async () => {
         try {
             // 1. Fetch Session Data (for timing, user, etc.)
