@@ -58,12 +58,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom landing page colors
-        "glow-cyan": "hsl(var(--glow-cyan))",
-        "glow-purple": "hsl(var(--glow-purple))",
-        "glow-blue": "hsl(var(--glow-blue))",
-        "glass-bg": "hsl(var(--glass-bg))",
-        "glass-border": "hsl(var(--glass-border))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -123,8 +117,6 @@ export default {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "hero-gradient": "radial-gradient(ellipse at center, hsl(var(--glow-cyan) / 0.15) 0%, transparent 70%)",
       },
     },
   },

@@ -1,63 +1,73 @@
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const footerLinks = {
-  Product: ['Features', 'Pricing', 'Integrations (Coming Soon)', 'Changelog (Coming Soon)'],
-  Company: ['About', 'Blog', 'Contact Us'],
-  Legal: ['Documentation', 'Help Center', 'Privacy Policy', 'Terms of Service'],
-  Connect: ['Twitter', 'LinkedIn', 'GitHub'],
+  Product: [
+    { label: 'Features', href: '/#features' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'How It Works', href: '/#how-it-works' },
+  ],
+  Company: [
+    { label: 'About', href: '/about' },
+    { label: 'FAQ', href: '/faq' },
+  ],
+  Legal: [
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '#' },
+  ],
+  Connect: [
+    { label: 'GitHub', href: 'https://github.com/samarthkashyap03', external: true },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/samarthkashyap/', external: true },
+  ],
 };
 
 export const Footer = () => {
   return (
-    <footer className="py-16 border-t border-border relative">
+    <footer className="py-16 border-t border-border bg-background">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <motion.a
-              href="#"
-              className="flex items-center gap-2 mb-4"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 mb-4"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">E</span>
+              <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+                <span className="text-background font-bold text-sm">E</span>
               </div>
-              <span className="text-xl font-bold gradient-text">Effortless</span>
-            </motion.a>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Support your work’s authenticity with privacy-first verification.
+              <span className="text-lg font-semibold text-foreground">Effortless</span>
+            </Link>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              Privacy-first verification for authentic work.
             </p>
-            <p className="text-muted-foreground/60 text-xs mt-4 leading-relaxed">
-              Effortless is currently in early access. Paid plans will be introduced based on usage and feedback.
+            <p className="text-muted-foreground/60 text-xs leading-relaxed">
+              Currently in early access. Paid plans coming soon based on feedback.
             </p>
           </div>
 
           {/* Links */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h4 className="font-semibold text-foreground mb-4">{category}</h4>
+              <h4 className="font-semibold text-foreground mb-4 text-sm">{category}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href={
-                        link === 'Privacy Policy' ? '/privacy' :
-                          link === 'Help Center' ? '/faq' :
-                            link === 'Features' ? '/#features' :
-                              link === 'Pricing' ? '/pricing' :
-                                link === 'About' ? '/about' :
-                                  link === 'Contact Us' ? '#' :
-                                    link === 'GitHub' ? 'https://github.com/samarthkashyap03' :
-                                      link === 'LinkedIn' ? 'https://www.linkedin.com/in/samarthkashyap/' :
-                                        '#'
-                      }
-                      target={link === 'GitHub' || link === 'LinkedIn' ? '_blank' : '_self'}
-                      rel={link === 'GitHub' || link === 'LinkedIn' ? 'noopener noreferrer' : ''}
-                      className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline"
-                    >
-                      {link}
-                    </a>
+                  <li key={link.label}>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -68,17 +78,14 @@ export const Footer = () => {
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Effortless. All rights reserved.
+            {new Date().getFullYear()} Effortless. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-muted-foreground text-sm">
-            <a href="/privacy" className="hover:text-foreground transition-colors">
+            <Link to="/privacy" className="hover:text-foreground transition-colors">
               Privacy
-            </a>
+            </Link>
             <a href="#" className="hover:text-foreground transition-colors">
               Terms
-            </a>
-            <a href="#" className="hover:text-foreground transition-colors">
-              Cookies
             </a>
           </div>
         </div>
