@@ -1,79 +1,178 @@
 # Effortless — Proof of Human Work
 
-I built Effortless after noticing how difficult it has become to distinguish between content created by a person and content generated entirely by AI.
+Effortless is a project I built to explore a simple question:
 
-Most existing solutions try to analyze the final output and decide whether it "looks AI-generated." The problem is that these approaches are often unreliable and can produce false positives.
+How can someone prove that a piece of work was created by a person without storing or analyzing the work itself?
 
-Instead of focusing on the content itself, I wanted to explore a different question:
+Instead of looking at the final document and trying to guess whether AI was used, Effortless focuses on the writing process. It creates a verification certificate that is linked to a specific document and can later be used to verify that the document was produced during a real writing session.
 
-**Can we verify the process behind a piece of work without ever seeing or storing the work itself?**
+The platform does not store or read document content.
 
-Effortless is my attempt at solving that problem.
+## What Problem Does This Solve?
 
-The application generates a cryptographic certificate that links a finished document to a real writing session. Rather than analyzing the text, it observes non-content signals such as writing activity, editing behavior, and revision patterns. The document remains private and is never stored by the platform.
+With AI tools becoming more common, it is getting harder to know how a document was created.
 
-## The Idea
+Most AI detectors try to analyze the text itself and make a prediction. These systems are often unreliable and can incorrectly flag human-written work.
 
-When a user writes inside the editor, Effortless collects behavioral signals that indicate a genuine writing process.
+Effortless takes a different approach.
 
-Examples include:
+Instead of analyzing what was written, it focuses on how it was written.
 
-* Writing rhythm
-* Pause patterns
+## How It Works
+
+A user writes inside the Effortless editor.
+
+During the session, the application observes non-content signals such as:
+
+* Typing patterns
+* Pauses during writing
 * Editing and revision behavior
-* Session activity over time
 
-Importantly, the application does **not** store the document text, raw keystrokes, clipboard contents, or screen recordings.
+The document content itself is never analyzed or stored.
 
-Once the writing session is complete:
+When the session is finished:
 
 1. The document is exported as a PDF.
-2. A SHA-256 hash is generated from the exported file.
-3. A verification certificate is created and bound to that hash.
+2. A SHA-256 hash is generated from the PDF.
+3. A verification certificate is created using that hash.
 
-Because the certificate is tied to the exact document hash, any modification to the document will invalidate the verification.
+Anyone can later verify that:
 
-## What I Learned
+* The document matches the certificate.
+* The certificate belongs to that exact document.
+* The document was created during a recorded writing session.
 
-This project gave me hands-on experience with:
+Effortless never stores document content.
 
-* Designing privacy-first systems that minimize data collection
-* Applying cryptographic hashing for document verification
-* Building rich text editing experiences with Tiptap
-* Implementing authentication and secure data access with Supabase
-* Working with Row Level Security (RLS)
-* Testing React applications using Vitest and Playwright
-* Building modern TypeScript applications with a strong focus on developer experience
+## What Effortless Proves
 
-## Challenges
+* The document was created through a real writing process.
+* The verification certificate is linked to a specific document.
+* Any modification to the document invalidates the certificate.
 
-One of the biggest challenges was balancing verification with privacy.
+## What Effortless Does Not Do
 
-Many verification systems become more accurate by collecting more information. I wanted to explore how much confidence could be achieved while collecting as little information as possible.
+* Store document text
+* Log raw keystrokes
+* Capture clipboard contents
+* Record screens
+* Analyze writing quality or meaning
+* Determine whether AI was used
+* Claim originality or authorship
 
-Another challenge was designing a workflow that produces useful verification evidence without storing document content or requiring users to trust a centralized reviewer.
+The goal is to provide evidence about the writing process, not to judge the content.
+
+## Features
+
+* Privacy-focused verification system
+* Verification certificates linked to individual documents
+* Writing session tracking using behavioral signals
+* Independent verification without requiring an account
+* Clean writing dashboard and session management tools
+* Secure data access using Supabase Row Level Security (RLS)
 
 ## Tech Stack
 
-**Frontend**
+### Frontend
 
-* React
+* React 18 + Vite
 * TypeScript
-* Vite
 * Tailwind CSS
+* shadcn/ui
 * Framer Motion
 * Tiptap
-* shadcn/ui
 
-**Backend & Data**
+### State & Data
 
+* TanStack Query
 * Supabase
-* PostgreSQL
-* Supabase Authentication
-* Row Level Security (RLS)
+* React Hook Form
+* Zod
 
-## Disclaimer
+### Testing & Quality
 
-Effortless does not prove originality, authorship, or the absence of AI assistance.
+* Vitest
+* Playwright
+* ESLint
 
-It simply provides evidence that a document was produced through a recorded writing process and that the document has not been modified since verification.
+## Project Structure
+
+```bash
+src/
+├── components/          # Reusable UI components
+│   ├── ui/              # shadcn primitives
+│   └── ...              # Feature-specific components
+├── pages/               # Route-level pages
+│   ├── Auth.tsx
+│   ├── Sessions.tsx
+│   ├── WritingSession.tsx
+│   └── ...
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities and helpers
+├── integrations/        # External services (Supabase)
+└── App.tsx              # Application entry + routing
+```
+
+## Getting Started
+
+### Prerequisites
+
+* Node.js v18+
+* npm, yarn, or bun
+
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd effortless
+```
+
+2. Install dependencies
+
+```bash
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_EMAILJS_SERVICE_ID=your_emailjs_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+VITE_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+```
+
+### Run Locally
+
+```bash
+npm run dev
+```
+
+The application will start on `http://localhost:8080` (or another available port).
+
+## Scripts
+
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| npm run dev     | Start the development server |
+| npm run build   | Build for production         |
+| npm run preview | Preview the production build |
+| npm run lint    | Run ESLint                   |
+| npm test        | Run unit tests               |
+
+## Notes
+
+* Verification certificates are linked to a specific document.
+* Any change to the document after verification will invalidate the certificate.
+* Users are responsible for storing their documents and certificates.
+
+## License
+
+This repository is provided for demonstration and portfolio purposes.
+
+All rights reserved.
