@@ -1,5 +1,7 @@
 # Effortless — Proof of Human Work
 
+**Live Demo**: [https://effortless-app.com](https://effortless-app.com)
+
 Effortless is a project I built to explore a simple question:
 
 How can someone prove that a piece of work was created by a person without storing or analyzing the work itself?
@@ -7,6 +9,12 @@ How can someone prove that a piece of work was created by a person without stori
 Instead of looking at the final document and trying to guess whether AI was used, Effortless focuses on the writing process. It creates a verification certificate that is linked to a specific document and can later be used to verify that the document was produced during a real writing session.
 
 The platform does not store or read document content.
+
+## Screenshots
+
+![Screenshot 1](screenshots/screenshot1.png)
+![Screenshot 2](screenshots/screenshot2.png)
+![Screenshot 3](screenshots/screenshot3.png)
 
 ## What Problem Does This Solve?
 
