@@ -1,87 +1,101 @@
 # Effortless — Proof of Human Work
 
-Effortless is a privacy-first verification platform that proves how a piece of work was created, without ever storing or reading its content.
-It generates cryptographic certificates that bind a finished document to an authentic human creation process — allowing anyone to independently verify the work later.
+Effortless is a project I built to explore a simple question:
 
-Effortless focuses on process, not output.
+How can someone prove that a piece of work was created by a person without storing or analyzing the work itself?
 
-## 🔍 What Problem Does This Solve?
+Instead of looking at the final document and trying to guess whether AI was used, Effortless focuses on the writing process. It creates a verification certificate that is linked to a specific document and can later be used to verify that the document was produced during a real writing session.
 
-AI-generated content has made it difficult to trust whether a piece of writing or code was genuinely produced by a human.
-Traditional detectors guess based on text patterns and often produce false positives.
+The platform does not store or read document content.
 
-Effortless takes a different approach:
+## What Problem Does This Solve?
 
-**Instead of analyzing what was written, Effortless verifies how it was written.**
+With AI tools becoming more common, it is getting harder to know how a document was created.
 
-## 🧠 How It Works (High Level)
+Most AI detectors try to analyze the text itself and make a prediction. These systems are often unreliable and can incorrectly flag human-written work.
 
-A user writes inside Effortless’s secure editor.
+Effortless takes a different approach.
 
-Effortless observes behavioral signals such as:
-- typing rhythm
-- pauses and focus intervals
-- revision and editing patterns
-  (never the text itself).
+Instead of analyzing what was written, it focuses on how it was written.
 
-When the session ends:
-1. the document is exported as a PDF to the user
-2. a cryptographic hash (SHA-256) of that document is generated
-3. That hash is embedded into a verification certificate.
+## How It Works
+
+A user writes inside the Effortless editor.
+
+During the session, the application observes non-content signals such as:
+
+* Typing patterns
+* Pauses during writing
+* Editing and revision behavior
+
+The document content itself is never analyzed or stored.
+
+When the session is finished:
+
+1. The document is exported as a PDF.
+2. A SHA-256 hash is generated from the PDF.
+3. A verification certificate is created using that hash.
 
 Anyone can later verify that:
-- the document matches the certificate
-- the document was produced during an authentic human writing session
 
-**Effortless never stores document content.**
+* The document matches the certificate.
+* The certificate belongs to that exact document.
+* The document was created during a recorded writing session.
 
-## ✅ What Effortless Proves
+Effortless never stores document content.
 
-- The work was created through a natural, human-like writing process
-- The verification certificate is bound to this exact document
-- Any modification to the document invalidates the certificate
+## What Effortless Proves
 
-## ❌ What Effortless Does NOT Do
+* The document was created through a real writing process.
+* The verification certificate is linked to a specific document.
+* Any modification to the document invalidates the certificate.
 
-- ❌ Store document text
-- ❌ Log raw keystrokes
-- ❌ Capture clipboard contents
-- ❌ Record screens or background activity
-- ❌ Analyze writing quality or meaning
-- ❌ Claim originality or absence of AI assistance
+## What Effortless Does Not Do
 
-Effortless provides process evidence, not judgment.
+* Store document text
+* Log raw keystrokes
+* Capture clipboard contents
+* Record screens
+* Analyze writing quality or meaning
+* Determine whether AI was used
+* Claim originality or authorship
 
-## 🚀 Key Features
+The goal is to provide evidence about the writing process, not to judge the content.
 
-- **Privacy-First Verification**: Zero-knowledge architecture ensures content never leaves the user’s device.
-- **Behavioral Signal Analysis**: Uses timing, pauses, and revision patterns that are difficult to fake.
-- **Document-Bound Certificates**: Verification certificates are cryptographically linked to the exported document.
-- **Independent Verification**: Third parties can verify authenticity without an Effortless account.
-- **Modern Dashboard**: Clean, distraction-free UI for managing sessions and reports.
-- **Secure Architecture**: Built on Supabase with strict Row Level Security (RLS).
+## Features
 
-## 🛠️ Tech Stack
+* Privacy-focused verification system
+* Verification certificates linked to individual documents
+* Writing session tracking using behavioral signals
+* Independent verification without requiring an account
+* Clean writing dashboard and session management tools
+* Secure data access using Supabase Row Level Security (RLS)
+
+## Tech Stack
 
 ### Frontend
-- **Framework**: React 18 + Vite
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + tailwindcss-animate
-- **UI Components**: shadcn/ui 
-- **Animations**: Framer Motion
-- **Editor**: Tiptap
+
+* React 18 + Vite
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* Framer Motion
+* Tiptap
 
 ### State & Data
-- **Data Fetching**: TanStack Query
-- **Database & Auth**: Supabase
-- **Forms & Validation**: React Hook Form + Zod
+
+* TanStack Query
+* Supabase
+* React Hook Form
+* Zod
 
 ### Testing & Quality
-- **Unit Testing**: Vitest
-- **E2E Testing**: Playwright
-- **Linting**: ESLint
 
-## 📂 Project Structure
+* Vitest
+* Playwright
+* ESLint
+
+## Project Structure
 
 ```bash
 src/
@@ -99,24 +113,27 @@ src/
 └── App.tsx              # Application entry + routing
 ```
 
-## 🏁 Getting Started
+## Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- npm, yarn, or bun
+
+* Node.js v18+
+* npm, yarn, or bun
 
 ### Installation
 
 1. Clone the repository
-   ```bash
-   git clone <repository-url>
-   cd effortless
-   ```
+
+```bash
+git clone <repository-url>
+cd effortless
+```
 
 2. Install dependencies
-   ```bash
-   npm install
-   ```
+
+```bash
+npm install
+```
 
 ### Environment Variables
 
@@ -136,25 +153,26 @@ VITE_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
 npm run dev
 ```
 
-The app will be available at `http://localhost:8080` (or similar).
+The application will start on `http://localhost:8080` (or another available port).
 
-## 📜 Scripts
+## Scripts
 
-| Command | Description |
-| :--- | :--- |
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run unit tests |
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| npm run dev     | Start the development server |
+| npm run build   | Build for production         |
+| npm run preview | Preview the production build |
+| npm run lint    | Run ESLint                   |
+| npm test        | Run unit tests               |
 
-## ⚠️ Important Notes
+## Notes
 
-- Certificates are tied to a specific exported document
-- Any change to the document after verification invalidates the certificate
-- Users are responsible for storing their documents and certificates
+* Verification certificates are linked to a specific document.
+* Any change to the document after verification will invalidate the certificate.
+* Users are responsible for storing their documents and certificates.
 
-## 📄 License
+## License
 
-This repository is provided for demonstration and evaluation purposes.
+This repository is provided for demonstration and portfolio purposes.
+
 All rights reserved.
