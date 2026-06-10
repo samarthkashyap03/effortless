@@ -25,8 +25,8 @@ The platform does not store or read document content.
   </tr>
   <tr>
     <td width="50%" align="center" valign="top">
-      <b>Verification Certificate</b><br />
-      <img src="./screenshots/certificate.png" width="100%" style="max-width: 300px;" alt="Verification Certificate" />
+      <b>Writing Editor</b><br />
+      <img src="./screenshots/editor.png" width="100%" style="max-width: 400px;" alt="Writing Editor" />
     </td>
     <td width="50%" align="center" valign="top">
       <b>How It Works</b><br />
