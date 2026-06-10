@@ -12,9 +12,10 @@ The platform does not store or read document content.
 
 ## Screenshots
 
-![Screenshot 1](screenshots/screenshot1.png)
-![Screenshot 2](screenshots/screenshot2.png)
-![Screenshot 3](screenshots/screenshot3.png)
+![Screenshot 1](./screenshots/landing.png)
+![Screenshot 2](./screenshots/session_dashboard.png)
+![Screenshot 3](./screenshots/certificate.png)
+![Screenshot 4](./screenshots/how_it_works.png)
 
 ## What Problem Does This Solve?
 
