@@ -12,10 +12,28 @@ The platform does not store or read document content.
 
 ## Screenshots
 
-![Screenshot 1](./screenshots/landing.png)
-![Screenshot 2](./screenshots/session_dashboard.png)
-![Screenshot 3](./screenshots/certificate.png)
-![Screenshot 4](./screenshots/how_it_works.png)
+<table width="100%">
+  <tr>
+    <td width="50%" align="center">
+      <b>Landing Page</b><br />
+      <img src="./screenshots/landing.png" width="90%" alt="Landing Page" />
+    </td>
+    <td width="50%" align="center">
+      <b>Session Dashboard</b><br />
+      <img src="./screenshots/session_dashboard.png" width="90%" alt="Session Dashboard" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <b>Verification Certificate</b><br />
+      <img src="./screenshots/certificate.png" width="90%" alt="Verification Certificate" />
+    </td>
+    <td width="50%" align="center">
+      <b>How It Works</b><br />
+      <img src="./screenshots/how_it_works.png" width="90%" alt="How It Works" />
+    </td>
+  </tr>
+</table>
 
 ## What Problem Does This Solve?
 
