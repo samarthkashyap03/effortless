@@ -88,7 +88,7 @@ export default function PrivacyPolicy() {
                                     <ListItem>Revision patterns (add / remove / replace activity)</ListItem>
                                     <ListItem>Session duration and activity rhythm (focus/idle)</ListItem>
                                     <ListItem>Verification report metadata (session ID, time)</ListItem>
-                                    <ListItem>Document Cryptographic Hash (The digital fingerprint of your final file)</ListItem>
+                                    <ListItem>Document Signature (The digital fingerprint of your final file)</ListItem>
                                 </ul>
                                 <p className="mt-4 text-xs text-cyan-500/80 font-medium uppercase tracking-wider">This data describes process, not content.</p>
                             </Section>
@@ -101,7 +101,7 @@ export default function PrivacyPolicy() {
                                     <ListItem cross>Clipboard contents</ListItem>
                                 </ul>
                                 <p className="mt-4 text-xs text-zinc-500 italic border-t border-white/5 pt-3">
-                                    We store a one-way cryptographic hash of your final document to enable verification, but this cannot be reversed to reveal your actual text.
+                                    We store a one-way digital signature of your final document to enable verification, but this cannot be reversed to reveal your actual text.
                                 </p>
                             </Section>
                         </div>

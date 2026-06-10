@@ -51,7 +51,7 @@ const About = () => {
 
                         <p className="text-xl text-zinc-400 leading-relaxed max-w-2xl mx-auto">
                             In an AI-heavy world, the creation process matters.
-                            Effortless verifies how your work was written and cryptographically links it to the final document.
+                            Effortless verifies how your work was written and securely links it to the final document.
                         </p>
                     </motion.div>
                 </div>
@@ -86,7 +86,7 @@ const About = () => {
                                     Effortless is not just another detection tool. It's a fundamental shift in how we prove authorship.
                                 </p>
                                 <p>
-                                    By unobtrusively tracking the <span className="text-white font-medium">process</span> of creation, editing patterns, typing cadence, and focus interaction, we generate a cryptographic certificate that mathematically proves human effort was involved.
+                                    By unobtrusively tracking the <span className="text-white font-medium">process</span> of creation, editing patterns, typing cadence, and focus interaction, we generate a digital certificate that confirms human effort was involved.
                                 </p>
                                 <p>
                                     This protects students, writers, and developers from false accusations of AI plagiarism without ever needing to share their raw work content.

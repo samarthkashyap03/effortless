@@ -234,28 +234,28 @@ export default function Certificate() {
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 flex items-center justify-between print:hidden"
+                    className="mb-8 flex flex-col sm:flex-row gap-4 sm:items-center justify-between print:hidden"
                 >
                     <Button
                         variant="ghost"
                         onClick={() => navigate('/sessions')}
-                        className="text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="text-zinc-400 hover:text-white hover:bg-white/10 transition-colors self-start"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Sessions
                     </Button>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
                         <Button
                             onClick={() => window.print()}
                             variant="outline"
-                            className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
+                            className="flex-1 sm:flex-initial bg-transparent border-zinc-700 text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
                         >
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
                         </Button>
                         <Button
                             onClick={handleCopyLink}
-                            className="bg-zinc-100 text-zinc-900 hover:bg-white transition-all shadow-[0_0_15px_-3px_rgba(255,255,255,0.1)] font-medium"
+                            className="flex-1 sm:flex-initial bg-zinc-100 text-zinc-900 hover:bg-white transition-all shadow-[0_0_15px_-3px_rgba(255,255,255,0.1)] font-medium"
                         >
                             {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Share2 className="h-4 w-4 mr-2" />}
                             {copied ? "Copied" : "Share"}
@@ -269,16 +269,15 @@ export default function Certificate() {
                     initial={{ opacity: 0, y: 30, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="bg-white text-zinc-900 shadow-2xl shadow-black/50 print:shadow-none relative overflow-hidden print:overflow-visible flex flex-col rounded-sm"
-                    style={{ aspectRatio: '1/1.55' }} // Extended Ratio
+                    className="bg-white text-zinc-900 shadow-2xl shadow-black/50 print:shadow-none relative overflow-hidden print:overflow-visible flex flex-col rounded-sm aspect-auto md:aspect-[1/1.55]"
                 >
                     {/* Top Black Bar */}
                     <div className="h-4 w-full bg-zinc-950 shrink-0" />
 
-                    <div className="p-12 print:p-8 flex-1 flex flex-col relative z-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                    <div className="p-6 md:p-12 print:p-8 flex-1 flex flex-col relative z-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
 
                         {/* Header: Branding & ID */}
-                        <div className="flex justify-between items-start mb-16 print:mb-6 border-b-2 border-zinc-100 pb-8 print:pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 md:mb-16 print:mb-6 border-b-2 border-zinc-100 pb-8 print:pb-4">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-xl bg-zinc-950 flex items-center justify-center text-white font-serif font-bold text-2xl shadow-lg print:shadow-none">
                                     E
@@ -288,28 +287,28 @@ export default function Certificate() {
                                     <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-medium mt-0.5">Verification System</p>
                                 </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left">
                                 <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-1">Session Reference</p>
                                 <p className="font-mono text-xs text-zinc-600 bg-zinc-50 px-2 py-1 rounded border border-zinc-100 print:bg-transparent print:border-none">{session.id}</p>
                             </div>
                         </div>
 
                         {/* Title Section */}
-                        <div className="text-center mb-16 print:mb-8 relative">
+                        <div className="text-center mb-8 md:mb-16 print:mb-8 relative">
                             <div className="absolute top-1/2 left-0 w-full h-px bg-zinc-100 -z-10" />
-                            <h1 className="text-5xl print:text-4xl font-serif font-medium text-zinc-900 mb-6 print:mb-4 tracking-tight bg-white/80 backdrop-blur-sm inline-block px-8 relative z-10">
+                            <h1 className="text-3xl md:text-5xl print:text-4xl font-serif font-medium text-zinc-900 mb-6 print:mb-4 tracking-tight bg-white/80 backdrop-blur-sm inline-block px-4 md:px-8 relative z-10">
                                 Certificate of Authenticity
                             </h1>
                             <p className="text-zinc-500 text-sm uppercase tracking-widest max-w-lg mx-auto leading-relaxed bg-white/80 inline-block px-4">
-                                Behavioral Biometrics Analysis
+                                Drafting Behavior Analysis
                             </p>
                         </div>
 
                         {/* Main Body Grid */}
-                        <div className="grid grid-cols-12 gap-16 print:gap-8 flex-1">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 print:gap-8 flex-1">
 
                             {/* Left Column: Metrics & Evidence */}
-                            <div className="col-span-7 space-y-12 print:space-y-4">
+                            <div className="col-span-12 md:col-span-7 space-y-8 md:space-y-12 print:space-y-4">
                                 {/* Verdict Section */}
                                 <div>
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Verification Verdict</h3>
@@ -360,7 +359,7 @@ export default function Certificate() {
                                             {/* Session Activity */}
                                             <div>
                                                 <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                                    <Clock className="h-3.5 w-3.5" /> Temporal Data
+                                                    <Clock className="h-3.5 w-3.5" /> Session Timing
                                                     <Info className="h-3 w-3 text-zinc-300" />
                                                 </h3>
                                                 <div className="grid grid-cols-3 gap-4">
@@ -434,13 +433,13 @@ export default function Certificate() {
                                                     </Tooltip>
                                                 </div>
                                             </div>
-                                        </div>
+                        </div>
                                     </TooltipProvider>
                                 </div>
                             </div>
 
                             {/* Right Column: Score & Seal */}
-                            <div className="col-span-5 flex flex-col items-center justify-start pt-8 border-l border-zinc-100 pl-8">
+                            <div className="col-span-12 md:col-span-5 flex flex-col items-center justify-start pt-8 border-t md:border-t-0 md:border-l border-zinc-100 pl-0 md:pl-8 mt-6 md:mt-0">
 
                                 {/* The Seal */}
                                 <div className="relative w-40 h-40 mb-8 flex items-center justify-center">
@@ -489,24 +488,24 @@ export default function Certificate() {
 
 
                         {/* Footer */}
-                        <div className="mt-auto pt-8 border-t-2 border-zinc-100 flex items-end justify-between">
-                            <div>
-                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-2">Cryptographic Token</p>
-                                <p className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1.5 rounded select-all border border-zinc-100 max-w-[300px] truncate mb-4">
+                        <div className="mt-auto pt-8 border-t-2 border-zinc-100 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-6 sm:gap-4">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-2">Verification Code</p>
+                                <p className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1.5 rounded select-all border border-zinc-100 max-w-full truncate mb-4">
                                     {session.verification_token}
                                 </p>
 
                                 {session.document_hash && (
                                     <>
-                                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-2">Document Hash (SHA-256)</p>
-                                        <p className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1.5 rounded select-all border border-zinc-100 max-w-[300px] break-all">
+                                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-2">Document Signature (SHA-256)</p>
+                                        <p className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1.5 rounded select-all border border-zinc-100 max-w-full break-all">
                                             {session.document_hash}
                                         </p>
                                     </>
                                 )}
                             </div>
-                            <div className="flex items-end gap-4">
-                                <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-end justify-between sm:justify-end gap-4 shrink-0">
+                                <div className="flex flex-col items-center sm:items-end gap-1">
                                     <div className="bg-white p-1 rounded border border-zinc-100">
                                         <QRCode
                                             value={`${window.location.host}/verify/${session.verification_token}`}

@@ -17,41 +17,41 @@ export default function FAQ() {
             answer: (
                 <ul className="list-disc space-y-2 pl-4">
                     <li><strong>Start Session:</strong> Log in and begin a new writing session in our secure editor.</li>
-                    <li><strong>Write Naturally:</strong> Create your content. We silently track behavioral signals (timing, revisions) in the background.</li>
-                    <li><strong>End & Download:</strong> When finished, we generate a PDF of your work on your device and attach a unique cryptographic hash to it.</li>
-                    <li><strong>Verify:</strong> You receive a Certificate of Authenticity. Anyone can verify your PDF matches the certificate using the hash.</li>
+                    <li><strong>Write Naturally:</strong> Create your content. We silently track writing flow patterns (timing, revisions) in the background.</li>
+                    <li><strong>End & Download:</strong> When finished, we generate a PDF of your work on your device and attach a unique digital signature to it.</li>
+                    <li><strong>Verify:</strong> You receive a Certificate of Authenticity. Anyone can verify your PDF matches the certificate using the signature.</li>
                 </ul>
             ),
             icon: <Activity className="w-5 h-5 text-cyan-400" />
         },
         {
             question: "How does the verification work?",
-            answer: "Our system runs in the background while you write. It tracks biometric data points like typing rhythm, editing patterns (deletions, navigating), and time distribution. This allows us to distinguish between human content creation and AI generation without needing to read your actual words.",
+            answer: "Our system runs in the background while you write. It tracks writing patterns like typing rhythm, pauses, editing corrections, and overall time spent. This allows us to distinguish between human content creation and AI generation without needing to read your actual words.",
             icon: <HelpCircle className="w-5 h-5 text-cyan-400" />
         },
         {
             question: "Is my data private?",
-            answer: "Absolutely. Privacy is our core feature. We only analyze how you write, not what you write. No text content, screen captures, or clipboard history is ever stored on our servers. The only data we keep is the mathematical model of your typing behavior.",
+            answer: "Absolutely. Privacy is our core feature. We only analyze how you write, not what you write. No text content, screen captures, or clipboard history is ever stored on our servers. The only data we keep is a secure baseline of your typing style.",
             icon: <Shield className="w-5 h-5 text-purple-400" />
         },
         {
             question: "Can I use this for academic or professional work?",
-            answer: "Yes. The \"Certificate of Authenticity\" you generate is a verifiable proof of your effort. It contains a cryptographic token that anyone (professors, clients, or editors) can use to verify that the work was created by a human in a monitored environment.",
+            answer: "Yes. The \"Certificate of Authenticity\" you generate is a verifiable proof of your effort. It contains a unique verification code that anyone (professors, clients, or editors) can use to verify that the work was created by a human in a monitored environment.",
             icon: <FileCheck className="w-5 h-5 text-emerald-400" />
         },
         {
             question: "If you don’t store my work, how does the certificate apply to my document?",
-            answer: "We attach a cryptographic fingerprint of your document to the certificate. Anyone can independently verify they match.",
+            answer: "We attach a digital signature of your document to the certificate. Anyone can independently verify they match.",
             icon: <Lock className="w-5 h-5 text-amber-400" />
         },
         {
             question: "Can Effortless see or read my document?",
-            answer: "No. Your document is generated and hashed on your device. Only the fingerprint is stored.",
+            answer: "No. Your document is generated and signed on your device. Only the digital signature is stored.",
             icon: <EyeOff className="w-5 h-5 text-rose-400" />
         },
         {
             question: "Do you store my actual text?",
-            answer: "No. Your text never leaves your browser. The \"Begin Writing\" editor is a purely local environment for capture. Once you finish, the text is discarded from our awareness, and only the behavioral metrics are used to generate your certificate.",
+            answer: "No. Your text never leaves your browser. The \"Begin Writing\" editor is a purely local environment for capture. Once you finish, the text is discarded from our awareness, and only the writing patterns are used to generate your certificate.",
             icon: <UserCheck className="w-5 h-5 text-blue-400" />
         }
     ];
@@ -76,7 +76,7 @@ export default function FAQ() {
                             transition={{ duration: 0.5 }}
                             className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 mb-6 tracking-tight"
                         >
-                            Frequency Asked Questions
+                            Frequently Asked Questions
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}

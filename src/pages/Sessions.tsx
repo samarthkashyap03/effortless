@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Loader2, FileText, Code, LogOut, ChevronRight, ChevronDown, Sparkles, Clock, Calendar, Shield, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, FileText, Code, LogOut, ChevronRight, ChevronDown, Sparkles, Clock, Calendar, Shield, CheckCircle2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 interface Session {
     id: string;
@@ -24,6 +26,7 @@ interface Session {
     keystroke_count: number;
     report_id?: string | null;
     title?: string | null;
+    metrics?: any;
 }
 
 export default function Sessions() {
@@ -140,6 +143,107 @@ export default function Sessions() {
         navigate("/");
     };
 
+    const handleDownloadWork = async (session: Session) => {
+        try {
+            if (session.session_type === 'writing' && session.metrics?.pdf_base64) {
+                // Directly download the original base64 PDF
+                const base64Str = session.metrics.pdf_base64;
+                const response = await fetch(base64Str);
+                const blob = await response.blob();
+                const pdfFilename = `${session.title?.trim() || 'Effortless_Session'}.pdf`;
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = pdfFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                toast({
+                    title: "Download complete",
+                    description: `Successfully downloaded original PDF: ${session.title || 'Session work'}`,
+                });
+                return;
+            }
+
+            const final_text = session.metrics?.final_text;
+            if (!final_text) {
+                toast({
+                    variant: "destructive",
+                    title: "Download failed",
+                    description: "No text content found for this session.",
+                });
+                return;
+            }
+
+            if (session.session_type === 'writing') {
+                // Fallback for older sessions without pdf_base64
+                const pdfFilename = `${session.title?.trim() || 'Effortless_Session'}.pdf`;
+
+                // Create a temporary element to render the text nicely as a document
+                const container = document.createElement('div');
+                container.style.padding = '40px';
+                container.style.fontFamily = 'Arial, sans-serif';
+                container.style.color = '#111';
+                container.style.lineHeight = '1.6';
+                container.style.backgroundColor = '#fff';
+
+                const h1 = document.createElement('h1');
+                h1.style.fontSize = '24px';
+                h1.style.marginBottom = '20px';
+                h1.style.borderBottom = '1px solid #eee';
+                h1.style.paddingBottom = '10px';
+                h1.textContent = session.title || "Writing Session Document";
+                container.appendChild(h1);
+
+                const body = document.createElement('div');
+                body.style.whiteSpace = 'pre-wrap';
+                body.style.fontSize = '14px';
+                body.textContent = final_text;
+                container.appendChild(body);
+
+                document.body.appendChild(container);
+
+                const opt = {
+                    margin: 10,
+                    filename: pdfFilename,
+                    image: { type: 'jpeg' as const, quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+                };
+
+                await html2pdf().set(opt).from(container).save();
+                document.body.removeChild(container);
+            } else {
+                // Download code as text file
+                const codeBlob = new Blob([final_text], { type: 'text/plain;charset=utf-8' });
+                const codeFilename = `${session.title?.trim() || 'Effortless_Code'}.txt`;
+                const url = URL.createObjectURL(codeBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = codeFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            toast({
+                title: "Download complete",
+                description: `Successfully downloaded: ${session.title || 'Session work'}`,
+            });
+        } catch (e: any) {
+            console.error("Error downloading work:", e);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: e.message || "Failed to download work",
+            });
+        }
+    };
+
     const formatDuration = (ms: number | null) => {
         if (!ms && ms !== 0) return "-";
         const minutes = Math.floor(ms / 60000);
@@ -208,7 +312,7 @@ export default function Sessions() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="flex items-center justify-between mb-6"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
                 >
                     <div>
                         <h1 className="text-3xl font-bold text-foreground tracking-tight">
@@ -332,69 +436,87 @@ export default function Sessions() {
                                             className="glass-card glow-border p-5 transition-all duration-300 cursor-pointer hover:border-primary/30"
                                             onClick={() => session.report_id && navigate(`/certificate/${session.id}`)}
                                         >
-                                            <div className="flex items-center gap-5">
-                                                {/* Icon */}
-                                                <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${session.session_type === 'coding'
-                                                    ? 'bg-glow-blue/15 text-glow-blue'
-                                                    : 'bg-primary/15 text-primary'
-                                                    }`}>
-                                                    {session.session_type === "coding"
-                                                        ? <Code className="h-5 w-5" />
-                                                        : <FileText className="h-5 w-5" />
-                                                    }
-                                                </div>
-
-                                                {/* Title & Meta */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <h3 className="font-semibold text-foreground truncate text-base">
-                                                            {session.title || "Untitled Session"}
-                                                        </h3>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={`shrink-0 text-[10px] uppercase tracking-wider border-0 px-2.5 py-1 font-semibold ${session.status === "completed"
-                                                                ? "bg-emerald-500/20 text-emerald-400"
-                                                                : "bg-amber-500/20 text-amber-400"
-                                                                }`}
-                                                        >
-                                                            {session.status}
-                                                        </Badge>
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                <div className="flex items-start gap-4 flex-1 min-w-0">
+                                                    {/* Icon */}
+                                                    <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${session.session_type === 'coding'
+                                                        ? 'bg-glow-blue/15 text-glow-blue'
+                                                        : 'bg-primary/15 text-primary'
+                                                        }`}>
+                                                        {session.session_type === "coding"
+                                                            ? <Code className="h-5 w-5" />
+                                                            : <FileText className="h-5 w-5" />
+                                                        }
                                                     </div>
-                                                    <div className="flex items-center gap-5 text-xs text-muted-foreground">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Calendar className="h-3.5 w-3.5 text-primary/60" />
-                                                            {dateTime.date}
-                                                        </span>
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Clock className="h-3.5 w-3.5 text-primary/60" />
-                                                            {dateTime.time}
-                                                        </span>
-                                                        <span className="text-muted-foreground/60">•</span>
-                                                        <span className="flex items-center gap-1.5">
-                                                            <span className="text-muted-foreground/60">Duration:</span>
-                                                            {formatDuration(session.total_duration_ms)}
-                                                        </span>
-                                                        <span className="capitalize px-2 py-0.5 rounded-md bg-muted/50 text-muted-foreground">
-                                                            {session.session_type}
-                                                        </span>
+
+                                                    {/* Title & Meta */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                                            <h3 className="font-semibold text-foreground truncate text-base max-w-[180px] sm:max-w-xs">
+                                                                {session.title || "Untitled Session"}
+                                                            </h3>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`shrink-0 text-[10px] uppercase tracking-wider border-0 px-2.5 py-1 font-semibold ${session.status === "completed"
+                                                                    ? "bg-emerald-500/20 text-emerald-400"
+                                                                    : "bg-amber-500/20 text-amber-400"
+                                                                    }`}
+                                                            >
+                                                                {session.status}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                                                                {dateTime.date}
+                                                            </span>
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Clock className="h-3.5 w-3.5 text-primary/60" />
+                                                                {dateTime.time}
+                                                            </span>
+                                                            <span className="hidden sm:inline text-muted-foreground/60">•</span>
+                                                            <span className="flex items-center gap-1.5">
+                                                                <span className="text-muted-foreground/60">Duration:</span>
+                                                                {formatDuration(session.total_duration_ms)}
+                                                            </span>
+                                                            <span className="capitalize px-2 py-0.5 rounded-md bg-muted/50 text-muted-foreground">
+                                                                {session.session_type}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Action */}
-                                                <div className="shrink-0">
+                                                <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2 pt-2 sm:pt-0 border-t border-white/5 sm:border-t-0">
                                                     {session.report_id ? (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="h-9 px-4 text-xs border-glass-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/certificate/${session.id}`);
-                                                            }}
-                                                        >
-                                                            View report
-                                                            <ChevronRight className="h-3.5 w-3.5 ml-1.5" />
-                                                        </Button>
+                                                        <>
+                                                            {(session.metrics?.final_text || session.metrics?.pdf_base64) && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="w-full sm:w-auto h-9 px-3 text-xs text-muted-foreground hover:text-white hover:bg-white/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDownloadWork(session);
+                                                                    }}
+                                                                >
+                                                                    <Download className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
+                                                                    Download Work
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="w-full sm:w-auto h-9 px-4 text-xs border-glass-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-primary/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate(`/certificate/${session.id}`);
+                                                                }}
+                                                            >
+                                                                View report
+                                                                <ChevronRight className="h-3.5 w-3.5 ml-1.5" />
+                                                            </Button>
+                                                        </>
                                                     ) : (
                                                         <div className="w-9 h-9 flex items-center justify-center">
                                                             <div className="w-2 h-2 rounded-full bg-muted-foreground/30 animate-pulse" />

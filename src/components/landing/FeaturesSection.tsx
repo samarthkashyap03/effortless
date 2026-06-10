@@ -10,7 +10,7 @@ const features = [
     image: iconPrivacy,
     title: 'Privacy First',
     tagline: 'We verify your work — without seeing it.',
-    description: 'Zero-knowledge architecture means we never store or access your work content, only a cryptographic fingerprint of the final document is recorded.',
+    description: 'Privacy-first design means we never store or access your work content, only a secure digital fingerprint of the final document is recorded to verify authenticity.',
     gradient: 'from-primary to-glow-blue',
   },
   {
@@ -24,7 +24,7 @@ const features = [
     image: iconVerify,
     title: 'Verifiable Proof',
     tagline: 'One document. One certificate. One truth.',
-    description: 'Generate cryptographic certificates that are mathematically bound to your final document, proving authentic authorship to clients, employers, or institutions.',
+    description: 'Generate secure digital certificates that are permanently linked to your final document, proving authentic authorship to clients, employers, or institutions.',
     gradient: 'from-glow-cyan to-primary',
   },
 ];

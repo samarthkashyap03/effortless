@@ -69,7 +69,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-xl md:text-2xl text-zinc-300 mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md"
           >
-            Effortless verifies how your work was created and cryptographically binds that proof to your final document, without ever storing your text.
+            Effortless verifies how your work was created and securely links that proof to your final document, without ever storing your text.
 
           </motion.p>
 
@@ -108,9 +108,9 @@ export const HeroSection = () => {
             className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 text-zinc-500"
           >
             {[
-              { icon: Shield, text: "Zero-Knowledge" },
+              { icon: Shield, text: "Privacy-First" },
               { icon: Fingerprint, text: "Writing Behavior" },
-              { icon: CheckCircle, text: "Cryptographic Proof" }
+              { icon: CheckCircle, text: "Digital Signature" }
             ].map(({ icon: Icon, text }, i) => (
               <div key={i} className="flex items-center gap-3 group hover:text-cyan-400 transition-colors duration-300">
                 <Icon className="w-6 h-6 text-zinc-600 group-hover:text-cyan-500 transition-colors" />

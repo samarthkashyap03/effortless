@@ -19,7 +19,7 @@ const steps = [
     number: '03',
     icon: ShieldCheck,
     title: 'Generate Report',
-    description: 'Your work patterns are encrypted into a tamper-resistant verification record',
+    description: 'Your work patterns are saved as a secure, verified record',
   },
   {
     number: '04',

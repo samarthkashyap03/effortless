@@ -100,11 +100,12 @@ export default function Auth() {
 
         // Return to sign in after a delay
         setTimeout(() => setMode('signin'), 2000);
-      } catch (error: any) {
+      } catch (error) {
+        const err = error as Error;
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message || "Failed to send reset email.",
+          description: err.message || "Failed to send reset email.",
         });
       } finally {
         setIsLoading(false);
@@ -168,11 +169,12 @@ export default function Auth() {
           navigate('/sessions');
         }, 1000);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: error.message || "An error occurred during authentication",
+        description: err.message || "An error occurred during authentication",
       });
     } finally {
       setIsLoading(false);

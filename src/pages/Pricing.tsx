@@ -19,7 +19,7 @@ const Pricing = () => {
                 "Up to 3 verification certificates",
                 "Full writing & tracking experience",
                 "Verified document PDF",
-                "Cryptographic certificate",
+                "Verification certificate",
                 "No credit card required"
             ],
             cta: "Start Free",

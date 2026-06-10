@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
+import { ContactModal } from './ContactModal';
 
 const footerLinks = {
-  Product: ['Features', 'Pricing', 'Integrations (Coming Soon)', 'Changelog (Coming Soon)'],
-  Company: ['About', 'Blog', 'Contact Us'],
-  Legal: ['Documentation', 'Help Center', 'Privacy Policy', 'Terms of Service'],
-  Connect: ['Twitter', 'LinkedIn', 'GitHub'],
+  Product: ['Features', 'Pricing'],
+  Company: ['About', 'Contact Us'],
+  Legal: ['Privacy Policy'],
+  Connect: ['LinkedIn', 'GitHub'],
 };
 
 export const Footer = () => {
@@ -40,24 +41,31 @@ export const Footer = () => {
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link}>
-                    <a
-                      href={
-                        link === 'Privacy Policy' ? '/privacy' :
-                          link === 'Help Center' ? '/faq' :
-                            link === 'Features' ? '/#features' :
-                              link === 'Pricing' ? '/pricing' :
-                                link === 'About' ? '/about' :
-                                  link === 'Contact Us' ? '#' :
+                    {link === 'Contact Us' ? (
+                      <ContactModal>
+                        <button className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline text-left bg-transparent border-none p-0 cursor-pointer">
+                          Contact Us
+                        </button>
+                      </ContactModal>
+                    ) : (
+                      <a
+                        href={
+                          link === 'Privacy Policy' ? '/privacy' :
+                            link === 'Help Center' ? '/faq' :
+                              link === 'Features' ? '/#features' :
+                                link === 'Pricing' ? '/pricing' :
+                                  link === 'About' ? '/about' :
                                     link === 'GitHub' ? 'https://github.com/samarthkashyap03' :
                                       link === 'LinkedIn' ? 'https://www.linkedin.com/in/samarthkashyap/' :
                                         '#'
-                      }
-                      target={link === 'GitHub' || link === 'LinkedIn' ? '_blank' : '_self'}
-                      rel={link === 'GitHub' || link === 'LinkedIn' ? 'noopener noreferrer' : ''}
-                      className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline"
-                    >
-                      {link}
-                    </a>
+                        }
+                        target={link === 'GitHub' || link === 'LinkedIn' ? '_blank' : '_self'}
+                        rel={link === 'GitHub' || link === 'LinkedIn' ? 'noopener noreferrer' : ''}
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm link-underline"
+                      >
+                        {link}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

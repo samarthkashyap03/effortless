@@ -79,9 +79,9 @@ function OfflineVerificationTool() {
     // Detailed Steps for Animation
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const steps = [
-        { id: 'hash', label: "Cryptographic Hashing", icon: Lock },
-        { id: 'ocr', label: "Optical Character Recognition", icon: Scan },
-        { id: 'verify', label: "Logic Verification", icon: ShieldCheck },
+        { id: 'hash', label: "Signature Verification", icon: Lock },
+        { id: 'ocr', label: "Text Extraction", icon: Scan },
+        { id: 'verify', label: "Authenticity Check", icon: ShieldCheck },
     ];
 
     const [extractedHash, setExtractedHash] = useState<string | null>(null);
@@ -107,11 +107,26 @@ function OfflineVerificationTool() {
         if (file) setCertificateFile(file);
     }, []);
 
-    const calculateSHA256 = async (file: File): Promise<string> => {
-        const buffer = await file.arrayBuffer();
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const normalizeTextForHashing = (text: string): string => {
+        return text
+            .trim()
+            .replace(/\r\n/g, '\n')
+            .replace(/\s+/g, ' ');
+    };
+
+    const calculateSHA256OfString = async (str: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    const extractTextFromFile = async (file: File): Promise<string> => {
+        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            return await extractTextFromPDF(file);
+        }
+        return await file.text();
     };
 
     const extractTextFromPDF = async (file: File): Promise<string> => {
@@ -122,7 +137,12 @@ function OfflineVerificationTool() {
         // Attempt direct text extraction (better for digital PDFs)
         try {
             const textContent = await page.getTextContent();
-            const directText = textContent.items.map((item: any) => item.str).join(' ');
+            const directText = textContent.items.map((item) => {
+                if ('str' in item) {
+                    return item.str;
+                }
+                return '';
+            }).join(' ');
             // If we got a reasonable amount of text, return it
             if (directText.length > 50) {
                 console.log("Used direct PDF text extraction");
@@ -176,6 +196,12 @@ function OfflineVerificationTool() {
             // Step 1: Document Hash
             setCurrentStepIndex(0);
             await new Promise(r => setTimeout(r, 600)); // Minimum animation time
+            const calculateSHA256 = async (file: File): Promise<string> => {
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            };
             const docHash = await calculateSHA256(documentFile);
             setCalculatedHash(docHash);
 
@@ -239,13 +265,14 @@ function OfflineVerificationTool() {
                 setVerificationStatus('failure');
                 setStatusMessage(!hasEffortless
                     ? "Certificate invalid: Missing 'Effortless' security mark."
-                    : "Verification Failed: Document hash mismatch.");
+                    : "Verification Failed: Document signature mismatch.");
             }
 
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
             setVerificationStatus('failure');
-            setStatusMessage("Verification Error: " + error.message);
+            const err = error as Error;
+            setStatusMessage("Verification Error: " + err.message);
         }
     };
 
@@ -384,7 +411,7 @@ function OfflineVerificationTool() {
                                     <p className="text-emerald-400/80 text-sm mb-6">{statusMessage}</p>
 
                                     <div className="w-full bg-black/40 rounded-lg p-4 border border-emerald-500/20 text-left">
-                                        <p className="text-[10px] uppercase text-zinc-500 font-bold tracking-wider mb-2">Cryptographic Match</p>
+                                        <p className="text-[10px] uppercase text-zinc-500 font-bold tracking-wider mb-2">Signature Match</p>
                                         <div className="font-mono text-xs text-emerald-400 break-all leading-relaxed opacity-80">
                                             {extractedHash}
                                         </div>
@@ -420,13 +447,13 @@ function OfflineVerificationTool() {
 
                                     <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 text-xs font-mono">
                                         <div className="mb-4">
-                                            <span className="text-zinc-500 block mb-1 uppercase tracking-wider text-[10px]">Document Hash (Calculated)</span>
+                                            <span className="text-zinc-500 block mb-1 uppercase tracking-wider text-[10px]">Document Signature (Calculated)</span>
                                             <span className="text-cyan-400 block break-all leading-tight select-all">
                                                 {calculatedHash}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-zinc-500 block mb-1 uppercase tracking-wider text-[10px]">Certificate Hash (Extracted)</span>
+                                            <span className="text-zinc-500 block mb-1 uppercase tracking-wider text-[10px]">Certificate Signature (Extracted)</span>
                                             {extractedHash ? (
                                                 <span className="text-red-400 block break-all leading-tight select-all">
                                                     {extractedHash}
@@ -454,27 +481,24 @@ function OfflineVerificationTool() {
 function DropZone({
     title, subtitle, icon: Icon, file, setFile, onDrop, color
 }: {
-    title: string, subtitle: string, icon: any, file: File | null, setFile: (f: File | null) => void, onDrop: (e: React.DragEvent) => void, color: 'cyan' | 'purple'
+    title: string, subtitle: string, icon: React.ComponentType<{ className?: string }>, file: File | null, setFile: (f: File | null) => void, onDrop: (e: React.DragEvent) => void, color: 'cyan' | 'purple'
 }) {
     const [isDragging, setIsDragging] = useState(false);
-    const borderColor = color === 'cyan' ? 'group-hover:border-cyan-500/50' : 'group-hover:border-purple-500/50';
-    const bgColor = color === 'cyan' ? 'group-hover:bg-cyan-500/5' : 'group-hover:bg-purple-500/5';
     const iconColor = color === 'cyan' ? 'text-cyan-400' : 'text-purple-400';
 
     return (
         <div
             className={`relative group cursor-pointer border rounded-[2rem] h-[320px] transition-all duration-500 overflow-hidden
                 ${isDragging || file
-                    ? `border-${color}-500/50 bg-${color}-500/5`
-                    : `border-white/5 bg-[#0f0f12] hover:border-${color}-500/30 hover:shadow-2xl hover:shadow-${color}-500/10 hover:-translate-y-1`
-                }
-                ${errorCheckingBorder(borderColor)}`}
+                    ? color === 'cyan' ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-purple-500/50 bg-purple-500/5'
+                    : color === 'cyan' ? 'border-white/5 bg-[#0f0f12] hover:border-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-1' : 'border-white/5 bg-[#0f0f12] hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-1'
+                }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => { setIsDragging(false); onDrop(e); }}
             onClick={() => !file && document.getElementById(`file-${color}`)?.click()}
         >
-            <div className={`absolute inset-0 bg-gradient-to-br from-${color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${color === 'cyan' ? 'from-cyan-500/5' : 'from-purple-500/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
             <input
                 id={`file-${color}`}
                 type="file"
@@ -523,12 +547,6 @@ function DropZone({
     );
 }
 
-function errorCheckingBorder(cls: string) {
-    // Helper to allow dynamic class in template, actual Tailwind usage handles simpler
-    // Just a placeholder to keep code clean in the snippet above
-    return cls;
-}
-
 
 // ----------------------------------------------------------------------
 // Online Verification Logic (Existing - Preserved)
@@ -571,7 +589,7 @@ function OnlineVerification({ token }: { token: string }) {
                             if (error) console.error("Failed to update view count", error);
                         });
                 }
-            } catch (err: any) {
+            } catch (err) {
                 console.error('Error verifying token:', err);
                 setError("Unable to verify certificate. Please try again later.");
             } finally {
@@ -630,8 +648,9 @@ function OnlineVerification({ token }: { token: string }) {
     }
 
     // Extract data
-    const reportDetails = report.report_data || {} as { score?: number; metrics?: any };
-    const metrics = reportDetails.metrics || {};
+    const reportDetails = report.report_data || { score: 0, metrics: {} };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metrics = (reportDetails.metrics || {}) as any;
     const score = reportDetails.score ?? 0;
     const sessionInfo = report.sessions || { started_at: report.created_at, total_duration_ms: 0, active_time_ms: 0, idle_time_ms: 0 };
     const { band, color: scoreColor, bgColor, borderColor } = getScoreBand(score);
@@ -660,15 +679,15 @@ function OnlineVerification({ token }: { token: string }) {
                         <p className="text-xs font-mono bg-black/40 border border-white/5 px-2 py-1 rounded text-zinc-300">{token?.slice(0, 16)}...</p>
                     </div>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-[#121215] text-white shadow-2xl shadow-black/80 rounded-b-2xl overflow-hidden flex flex-col border border-white/5 border-t-0 ring-1 ring-white/5" style={{ minHeight: '800px' }}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-[#121215] text-white shadow-2xl shadow-black/80 rounded-b-2xl overflow-hidden flex flex-col border border-white/5 border-t-0 ring-1 ring-white/5" style={{ minHeight: 'auto' }}>
                     <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent shrink-0 opacity-50" />
-                    <div className="p-10 flex-1 flex flex-col relative z-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] bg-opacity-5">
-                        <div className="text-center mb-16 mt-6">
-                            <h1 className="text-4xl md:text-5xl font-serif font-medium text-white mb-4 tracking-tight relative inline-block">Certificate of Authenticity<div className="absolute inset-0 bg-white/5 blur-2xl -z-10 rounded-full" /></h1>
+                    <div className="p-6 md:p-10 flex-1 flex flex-col relative z-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] bg-opacity-5">
+                        <div className="text-center mb-10 md:mb-16 mt-6">
+                            <h1 className="text-3xl md:text-5xl font-serif font-medium text-white mb-4 tracking-tight relative inline-block">Certificate of Authenticity<div className="absolute inset-0 bg-white/5 blur-2xl -z-10 rounded-full" /></h1>
                             <p className="text-zinc-400 text-sm max-w-lg mx-auto leading-relaxed border-t border-white/5 pt-4 mt-2">This document certifies the behavioral patterns recorded during the creation of the work associated with this token.</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 flex-1">
-                            <div className="md:col-span-7 space-y-10">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 flex-1">
+                            <div className="col-span-12 md:col-span-7 space-y-10">
                                 <div>
                                     <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Analysis Result</h3>
                                     <div className={`p-6 rounded-xl border ${borderColor.replace('border-', 'border-opacity-30 border-')} ${bgColor.replace('bg-', 'bg-opacity-10 bg-')} backdrop-blur-sm`}>
@@ -703,7 +722,7 @@ function OnlineVerification({ token }: { token: string }) {
                                     </div>
                                 </div>
                             </div>
-                            <div className="md:col-span-5 flex flex-col items-center justify-start pt-8 border-l border-white/5 pl-8">
+                            <div className="col-span-12 md:col-span-5 flex flex-col items-center justify-start pt-8 border-t md:border-t-0 md:border-l border-white/5 pl-0 md:pl-8 mt-6 md:mt-0">
                                 <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
                                     <div className={`absolute inset-0 rounded-full border-4 ${borderColor.replace('border-', 'border-opacity-20 border-')} opacity-30`} />
                                     <div className={`absolute inset-4 rounded-full border border-dashed ${borderColor.replace('border-', 'border-opacity-40 border-')} opacity-50 animate-spin-slow`} />

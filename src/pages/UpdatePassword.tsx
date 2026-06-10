@@ -67,11 +67,12 @@ export default function UpdatePassword() {
             // Redirect to sessions/dashboard
             setTimeout(() => navigate('/sessions'), 1500);
 
-        } catch (err: any) {
+        } catch (err) {
+            const error = err as Error;
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: err.message || "Failed to update password.",
+                description: error.message || "Failed to update password.",
             });
         } finally {
             setIsLoading(false);

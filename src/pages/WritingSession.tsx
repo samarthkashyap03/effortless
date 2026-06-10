@@ -103,6 +103,13 @@ export default function WritingSession() {
     const trackingRef = useRef<TrackingSDK | null>(null);
     const [showExitDialog, setShowExitDialog] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(true);
+    const [showDownloadConfirmDialog, setShowDownloadConfirmDialog] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [pendingSessionData, setPendingSessionData] = useState<{
+        payload: unknown;
+        scoreResult: unknown;
+        hashHex: string;
+    } | null>(null);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -227,15 +234,70 @@ export default function WritingSession() {
         isPasteEventRef.current = false;
     };
 
+    // Text Normalization & Hashing Helpers
+    const normalizeTextForHashing = (text: string): string => {
+        return text
+            .trim()
+            .replace(/\r\n/g, '\n')
+            .replace(/\s+/g, ' ');
+    };
+
+    const calculateSHA256OfString = async (str: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    // Draft Recovery
+    const [draftLoaded, setDraftLoaded] = useState(false);
+    useEffect(() => {
+        const saved = localStorage.getItem("effortless_writing_draft");
+        if (saved) {
+            try {
+                const { title: savedTitle, content: savedContent } = JSON.parse(saved);
+                if (savedContent && !draftLoaded) {
+                    setTitle(savedTitle);
+                    setContent(savedContent);
+                    setTempTitle(savedTitle);
+                    setDraftLoaded(true);
+                    toast({
+                        title: "Draft Restored",
+                        description: "Your previous unsaved writing draft has been automatically restored.",
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to parse saved draft:", e);
+            }
+        }
+    }, [draftLoaded, toast]);
+
+    useEffect(() => {
+        if (content && content !== "<p></p>" && content !== HOW_TO_USE_CONTENT) {
+            localStorage.setItem("effortless_writing_draft", JSON.stringify({ title, content }));
+        }
+    }, [title, content]);
+
+    const blobToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
+
     const handleStopSession = async () => {
         try {
             if (!trackingRef.current) return;
+            setIsSaving(true);
 
             const payload = trackingRef.current.getSessionPayload();
             const { calculateScore } = await import("@/lib/scoring");
             const scoreResult = calculateScore(payload);
 
-            // --- PDF Generation & Hashing ---
+            // --- PDF Generation ---
             const element = document.getElementById('editor-content');
             if (!element) throw new Error("Editor content not found");
 
@@ -251,13 +313,18 @@ export default function WritingSession() {
             // Generate PDF Blob
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
 
-            // Compute Hash of PDF
+            // Compute Hash of PDF binary blob
             const pdfBuffer = await pdfBlob.arrayBuffer();
             const hashBuffer = await crypto.subtle.digest('SHA-256', pdfBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-            // Trigger Download
+            // Convert PDF blob to base64 for dashboard download persistence
+            const pdfBase64 = await blobToBase64(pdfBlob);
+            // @ts-ignore
+            payload.pdf_base64 = pdfBase64;
+
+            // Trigger Download automatically
             const url = URL.createObjectURL(pdfBlob);
             const a = document.createElement('a');
             a.href = url;
@@ -266,15 +333,6 @@ export default function WritingSession() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-
-            // Force user to confirm download
-            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to let browser show save dialog
-            const confirmed = window.confirm("Important: Have you saved your work PDF? It will not be stored online and cannot be recovered later. Click OK only after the download is complete.");
-
-            if (!confirmed) {
-                return; // User cancelled, do not proceed with session end
-            }
-            // --------------------------------
 
             // Verification Token
             const verificationToken = crypto.randomUUID();
@@ -286,12 +344,13 @@ export default function WritingSession() {
             // Use CANONICAL duration from tracking SDK (performance.now based)
             const duration = Math.round(payload.duration_ms);
 
+            // Insert to Supabase directly
             const { data, error } = await supabase.from('sessions').insert({
                 user_id: user.id,
                 session_type: 'writing',
                 status: 'completed',
                 started_at: new Date(startTime).toISOString(),
-                ended_at: new Date().toISOString(), // DB timestamp
+                ended_at: new Date().toISOString(),
                 total_duration_ms: duration,
 
                 // Core counts
@@ -322,7 +381,7 @@ export default function WritingSession() {
 
                 // Typing patterns
                 average_typing_speed: scoreResult.metrics.keys_per_min || 0,
-                typing_bursts: null, // Hardened to null as per section 7
+                typing_bursts: null,
                 pause_distribution: {
                     pause_hist: payload.pause_hist,
                     inter_word_gap_hist: payload.inter_word_gap_hist,
@@ -332,7 +391,7 @@ export default function WritingSession() {
                 score: scoreResult.score,
                 metrics: payload,
                 verification_token: verificationToken,
-                final_output_hash: hashHex, // Now storing the PDF hash
+                final_output_hash: hashHex,
                 final_output_length: payload.output_len || 0,
                 title: title.trim() || "Untitled Document",
                 document_hash: hashHex,
@@ -369,30 +428,36 @@ export default function WritingSession() {
                         title: "Warning",
                         description: "Session saved, but certificate generation failed.",
                     });
-                    // Still navigate to sessions if report fails, or maybe stay? 
-                    // Let's navigate to sessions list as fallback
-                    navigate('/sessions');
                 } else {
                     toast({
                         title: "Session Saved",
                         description: `Session saved with Score: ${scoreResult.score} (${scoreResult.band})`,
                     });
-                    navigate(`/certificate/${sessionData.id}`);
                 }
+
+                // Clear local draft
+                localStorage.removeItem("effortless_writing_draft");
+
+                // Show completion dialog with redirection option
+                setPendingSessionData({ payload, scoreResult, hashHex: sessionData.id }); // Reuse hashHex field temporarily to store ID
+                setShowDownloadConfirmDialog(true);
             } else {
-                navigate('/sessions');
+                throw new Error("No session data returned after insert");
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            console.error('Error saving session:', error);
+
+        } catch (error) {
+            console.error('Error initiating session end:', error);
+            const err = error as Error;
             toast({
                 variant: 'destructive',
-                title: "Error Saving Session",
-                description: error.message || "Unknown error occurred",
+                title: "Error Ending Session",
+                description: err.message || "Unknown error occurred",
             });
-            // Do not navigate away so user can retry or copy text
+        } finally {
+            setIsSaving(false);
         }
     };
+
 
     // Focus input when editing starts
     useEffect(() => {
@@ -476,10 +541,10 @@ export default function WritingSession() {
                     ) : (
                         <button
                             onClick={handleTitleEdit}
-                            className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800/50 px-3 py-1.5 rounded-full transition-all text-zinc-400 hover:text-zinc-100 group/title"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800/50 px-3 py-1.5 rounded-full transition-all text-zinc-400 hover:text-zinc-100 group/title overflow-hidden max-w-[150px] sm:max-w-xs"
                         >
-                            <span className="font-medium text-sm tracking-wide">{title}</span>
-                            <Pencil className="h-3 w-3 text-zinc-600 group-hover/title:text-zinc-400 transition-colors opacity-0 group-hover/title:opacity-100" />
+                            <span className="font-medium text-sm tracking-wide truncate">{title}</span>
+                            <Pencil className="h-3 w-3 text-zinc-600 group-hover/title:text-zinc-400 transition-colors opacity-0 group-hover/title:opacity-100 shrink-0" />
                         </button>
                     )}
                 </div>
@@ -580,6 +645,51 @@ export default function WritingSession() {
                             </div>
                         </DialogContent>
                     </Dialog>
+
+                    {/* Download Confirmation Dialog */}
+                    <Dialog open={showDownloadConfirmDialog} onOpenChange={setShowDownloadConfirmDialog}>
+                        <DialogContent className="bg-[#121214] border-zinc-800 text-zinc-100 sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                    <Check className="h-5 w-5 text-emerald-500 animate-pulse" />
+                                    Session Verified & Saved!
+                                </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="py-4 space-y-4">
+                                <p className="text-zinc-400 text-sm leading-relaxed">
+                                    Your writing session has been successfully verified and saved to the database.
+                                </p>
+                                <div className="p-4 bg-zinc-900/50 rounded-xl border border-zinc-800/50 text-xs text-zinc-400 leading-normal space-y-3">
+                                    <p className="font-semibold text-zinc-200">📥 Document Download started:</p>
+                                    <p className="text-zinc-500">
+                                        Your PDF download was triggered automatically. If the download didn't start or you closed the page early, don't worry!
+                                    </p>
+                                    <p className="text-cyan-400 font-medium">
+                                        You can always download your work later from the Verification Sessions dashboard at any time.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-2">
+                                <Button
+                                    onClick={() => {
+                                        setShowDownloadConfirmDialog(false);
+                                        const targetId = pendingSessionData?.hashHex;
+                                        setPendingSessionData(null);
+                                        if (targetId) {
+                                            navigate(`/certificate/${targetId}`);
+                                        } else {
+                                            navigate('/sessions');
+                                        }
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-500/20 w-full sm:w-auto font-semibold"
+                                >
+                                    View Certificate
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </motion.header>
 
@@ -591,52 +701,53 @@ export default function WritingSession() {
                         initial={{ opacity: 0, scale: 0.95, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        style={{
-                            width: editorWidth,
-                            "--editor-font-family": fontSettings.family,
-                            "--editor-font-size": fontSettings.size,
-                        } as React.CSSProperties}
-                        className="relative bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 ring-1 ring-zinc-900/5 flex flex-col min-h-[400px] text-zinc-900 selection:bg-cyan-100 selection:text-cyan-900 group/editor transition-all duration-300 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.4)]"
-                    >
-                        {/* Top reflection glow */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-50" />
-
-                        {/* Editor Header / Top padding is handled by Editor component layout usually, ensuring rounded corners */}
-                        <div className="flex-1 flex flex-col overflow-hidden rounded-[2rem] bg-white">
-                            <Editor
-                                content={content}
-                                onChange={setContent}
-                                onTransaction={handleTransaction}
-                                fontFamily={fontSettings.family}
-                                onFontChange={(font) => setFontSettings(prev => ({ ...prev, family: font }))}
-                                fontSize={fontSettings.size}
-                                onFontSizeChange={(size) => setFontSettings(prev => ({ ...prev, size: size }))}
-                                onPaste={() => {
-                                    isPasteEventRef.current = true;
-                                }}
-                            />
-                        </div>
-
-                        {/* Resize Handles */}
-                        <div
-                            className="absolute top-10 bottom-10 -right-6 w-8 cursor-ew-resize flex items-center justify-center opacity-0 group-hover/editor:opacity-100 transition-opacity duration-300"
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                setIsResizing(true);
-                            }}
-                        >
-                            <div className="w-1.5 h-16 rounded-full bg-zinc-600/20 backdrop-blur-sm border border-white/10 hover:bg-cyan-500/50 transition-colors shadow-lg" />
-                        </div>
-                        <div
-                            className="absolute top-10 bottom-10 -left-6 w-8 cursor-ew-resize flex items-center justify-center opacity-0 group-hover/editor:opacity-100 transition-opacity duration-300"
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                setIsResizing(true);
-                            }}
-                        >
-                            <div className="w-1.5 h-16 rounded-full bg-zinc-600/20 backdrop-blur-sm border border-white/10 hover:bg-cyan-500/50 transition-colors shadow-lg" />
-                        </div>
-                    </motion.div>
+                         style={{
+                             width: "100%",
+                             maxWidth: `${editorWidth}px`,
+                             "--editor-font-family": fontSettings.family,
+                             "--editor-font-size": fontSettings.size,
+                         } as React.CSSProperties}
+                         className="relative bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 ring-1 ring-zinc-900/5 flex flex-col min-h-[400px] text-zinc-900 selection:bg-cyan-100 selection:text-cyan-900 group/editor transition-all duration-300 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.4)]"
+                     >
+                         {/* Top reflection glow */}
+                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-50" />
+ 
+                         {/* Editor Header / Top padding is handled by Editor component layout usually, ensuring rounded corners */}
+                         <div className="flex-1 flex flex-col overflow-hidden rounded-[2rem] bg-white">
+                             <Editor
+                                 content={content}
+                                 onChange={setContent}
+                                 onTransaction={handleTransaction}
+                                 fontFamily={fontSettings.family}
+                                 onFontChange={(font) => setFontSettings(prev => ({ ...prev, family: font }))}
+                                 fontSize={fontSettings.size}
+                                 onFontSizeChange={(size) => setFontSettings(prev => ({ ...prev, size: size }))}
+                                 onPaste={() => {
+                                     isPasteEventRef.current = true;
+                                 }}
+                             />
+                         </div>
+ 
+                         {/* Resize Handles */}
+                         <div
+                             className="absolute top-10 bottom-10 -right-6 w-8 cursor-ew-resize hidden md:flex items-center justify-center opacity-0 group-hover/editor:opacity-100 transition-opacity duration-300"
+                             onMouseDown={(e) => {
+                                 e.preventDefault();
+                                 setIsResizing(true);
+                             }}
+                         >
+                             <div className="w-1.5 h-16 rounded-full bg-zinc-600/20 backdrop-blur-sm border border-white/10 hover:bg-cyan-500/50 transition-colors shadow-lg" />
+                         </div>
+                         <div
+                             className="absolute top-10 bottom-10 -left-6 w-8 cursor-ew-resize hidden md:flex items-center justify-center opacity-0 group-hover/editor:opacity-100 transition-opacity duration-300"
+                             onMouseDown={(e) => {
+                                 e.preventDefault();
+                                 setIsResizing(true);
+                             }}
+                         >
+                             <div className="w-1.5 h-16 rounded-full bg-zinc-600/20 backdrop-blur-sm border border-white/10 hover:bg-cyan-500/50 transition-colors shadow-lg" />
+                         </div>
+                     </motion.div>
                 </div>
             </main>
         </div>

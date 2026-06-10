@@ -30,14 +30,14 @@ export const SecuritySection = () => {
             transition={{ duration: 0.6 }}
           >
             <span className="text-primary text-sm font-semibold uppercase tracking-wider">
-              Zero-Knowledge Architecture
+              Privacy-First Design
             </span>
             <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6">
               Your Privacy is{' '}
               <span className="gradient-text">Non-Negotiable</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
-              Effortless uses cutting-edge zero-knowledge cryptography to verify your work
+              Effortless uses advanced privacy technology to verify your work
               without ever accessing your actual content. We capture behavioral patterns—timing,
               rhythm, and flow—not what you type.
             </p>

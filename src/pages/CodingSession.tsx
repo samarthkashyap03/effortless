@@ -85,6 +85,58 @@ export default function CodingSession() {
     // Tracking SDK
     const trackingRef = useRef<TrackingSDK | null>(null);
     const [showExitDialog, setShowExitDialog] = useState(false);
+    const [showDownloadConfirmDialog, setShowDownloadConfirmDialog] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [pendingSessionData, setPendingSessionData] = useState<{
+        payload: unknown;
+        scoreResult: unknown;
+        hashHex: string;
+    } | null>(null);
+
+    // Text Normalization & Hashing Helpers
+    const normalizeTextForHashing = (text: string): string => {
+        return text
+            .trim()
+            .replace(/\r\n/g, '\n')
+            .replace(/\s+/g, ' ');
+    };
+
+    const calculateSHA256OfString = async (str: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    // Draft Recovery
+    const [draftLoaded, setDraftLoaded] = useState(false);
+    useEffect(() => {
+        const saved = localStorage.getItem("effortless_coding_draft");
+        if (saved) {
+            try {
+                const { title: savedTitle, content: savedContent } = JSON.parse(saved);
+                if (savedContent && !draftLoaded) {
+                    setTitle(savedTitle);
+                    setContent(savedContent);
+                    setTempTitle(savedTitle);
+                    setDraftLoaded(true);
+                    toast({
+                        title: "Draft Restored",
+                        description: "Your previous unsaved coding draft has been automatically restored.",
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to parse saved draft:", e);
+            }
+        }
+    }, [draftLoaded, toast]);
+
+    useEffect(() => {
+        if (content && content !== "<p></p>" && content !== HOW_TO_USE_CONTENT) {
+            localStorage.setItem("effortless_coding_draft", JSON.stringify({ title, content }));
+        }
+    }, [title, content]);
 
     useEffect(() => {
         // Initialize tracking
@@ -169,17 +221,30 @@ export default function CodingSession() {
     const handleStopSession = async () => {
         try {
             if (!trackingRef.current) return;
+            setIsSaving(true);
 
             const payload = trackingRef.current.getSessionPayload();
             const { calculateScore } = await import("@/lib/scoring");
             const scoreResult = calculateScore(payload);
 
-            // Compute Hash
-            const encoder = new TextEncoder();
-            const encodedData = encoder.encode(trackingRef.current?.getSessionPayload().final_text || "");
-            const hashBuffer = await crypto.subtle.digest('SHA-256', encodedData);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            // Compute Hash of normalized text
+            const normalizedText = normalizeTextForHashing(payload.final_text);
+            const hashHex = await calculateSHA256OfString(normalizedText);
+
+            // Update payload and results with clean hash
+            payload.final_text = normalizedText;
+
+            // Trigger download of code content automatically
+            const codeBlob = new Blob([payload.final_text], { type: 'text/plain;charset=utf-8' });
+            const codeFilename = `${title.trim() || 'Effortless_Code'}.txt`;
+            const url = URL.createObjectURL(codeBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = codeFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
             // Verification Token
             const verificationToken = crypto.randomUUID();
@@ -191,9 +256,10 @@ export default function CodingSession() {
             // Use CANONICAL duration from tracking SDK (performance.now based)
             const duration = Math.round(payload.duration_ms);
 
+            // Insert to Supabase directly
             const { data, error } = await supabase.from('sessions').insert({
                 user_id: user.id,
-                session_type: 'coding', // CHANGED: session_type to coding
+                session_type: 'coding',
                 status: 'completed',
                 started_at: new Date(startTime).toISOString(),
                 ended_at: new Date().toISOString(),
@@ -240,6 +306,8 @@ export default function CodingSession() {
                 final_output_hash: hashHex,
                 final_output_length: payload.output_len || 0,
                 title: title.trim() || "Untitled Code Session",
+                document_hash: hashHex,
+                hash_algorithm: 'SHA-256',
             }).select();
 
             if (error) throw error;
@@ -272,18 +340,22 @@ export default function CodingSession() {
                         title: "Warning",
                         description: "Session saved, but certificate generation failed.",
                     });
-                    navigate('/sessions');
                 } else {
                     toast({
                         title: "Session Saved",
                         description: `Session saved with Score: ${scoreResult.score} (${scoreResult.band})`,
                     });
-                    navigate(`/certificate/${sessionData.id}`);
                 }
+
+                // Clear draft
+                localStorage.removeItem("effortless_coding_draft");
+
+                // Show completion dialog with redirection option
+                setPendingSessionData({ payload, scoreResult, hashHex: sessionData.id });
+                setShowDownloadConfirmDialog(true);
             } else {
-                navigate('/sessions');
+                throw new Error("No session data returned after insert");
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Error saving session:', error);
             toast({
@@ -291,6 +363,8 @@ export default function CodingSession() {
                 title: "Error Saving Session",
                 description: error.message || "Unknown error occurred",
             });
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -467,6 +541,51 @@ export default function CodingSession() {
                                     }}
                                 >
                                     End Session
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Download Confirmation Dialog */}
+                    <Dialog open={showDownloadConfirmDialog} onOpenChange={setShowDownloadConfirmDialog}>
+                        <DialogContent className="bg-[#121214] border-zinc-800 text-zinc-100 sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                    <Check className="h-5 w-5 text-emerald-500 animate-pulse" />
+                                    Session Verified & Saved!
+                                </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="py-4 space-y-4">
+                                <p className="text-zinc-400 text-sm leading-relaxed">
+                                    Your coding session has been successfully verified and saved to the database.
+                                </p>
+                                <div className="p-4 bg-zinc-900/50 rounded-xl border border-zinc-800/50 text-xs text-zinc-400 leading-normal space-y-3">
+                                    <p className="font-semibold text-zinc-200">📥 Document Download started:</p>
+                                    <p className="text-zinc-500">
+                                        Your source code download was triggered automatically. If the download didn't start or you closed the page early, don't worry!
+                                    </p>
+                                    <p className="text-cyan-400 font-medium">
+                                        You can always download your work later from the Verification Sessions dashboard at any time.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-2">
+                                <Button
+                                    onClick={() => {
+                                        setShowDownloadConfirmDialog(false);
+                                        const targetId = pendingSessionData?.hashHex;
+                                        setPendingSessionData(null);
+                                        if (targetId) {
+                                            navigate(`/certificate/${targetId}`);
+                                        } else {
+                                            navigate('/sessions');
+                                        }
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-500/20 w-full sm:w-auto font-semibold"
+                                >
+                                    View Certificate
                                 </Button>
                             </div>
                         </DialogContent>
