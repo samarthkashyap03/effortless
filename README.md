@@ -16,21 +16,21 @@ The platform does not store or read document content.
   <tr>
     <td width="50%" align="center">
       <b>Landing Page</b><br />
-      <img src="./screenshots/landing.png" width="90%" alt="Landing Page" />
+      <img src="./screenshots/landing.png" style="max-height: 220px; max-width: 100%;" alt="Landing Page" />
     </td>
     <td width="50%" align="center">
       <b>Session Dashboard</b><br />
-      <img src="./screenshots/session_dashboard.png" width="90%" alt="Session Dashboard" />
+      <img src="./screenshots/session_dashboard.png" style="max-height: 220px; max-width: 100%;" alt="Session Dashboard" />
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
       <b>Verification Certificate</b><br />
-      <img src="./screenshots/certificate.png" width="90%" alt="Verification Certificate" />
+      <img src="./screenshots/certificate.png" style="max-height: 220px; max-width: 100%;" alt="Verification Certificate" />
     </td>
     <td width="50%" align="center">
       <b>How It Works</b><br />
-      <img src="./screenshots/how_it_works.png" width="90%" alt="How It Works" />
+      <img src="./screenshots/how_it_works.png" style="max-height: 220px; max-width: 100%;" alt="How It Works" />
     </td>
   </tr>
 </table>
