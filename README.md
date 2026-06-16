@@ -71,6 +71,72 @@ Anyone can later verify that:
 
 Effortless never stores document content.
 
+## System Architecture
+
+The following diagram illustrates how the editor, tracking code, scoring logic, and database work together to save and verify writing sessions:
+
+```mermaid
+flowchart TD
+    %% Styling Configuration
+    classDef client fill:#0d2a4a,stroke:#00a3ff,stroke-width:2px,color:#fff;
+    classDef db fill:#0b261a,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef ext fill:#26262b,stroke:#a1a1aa,stroke-width:2px,color:#fff;
+    
+    subgraph Client ["Frontend App"]
+        UI["Editor UI (Tiptap Editor)"]:::client
+        SDK["Tracking SDK (tracking.ts)"]:::client
+        Scoring["Scoring Engine (scoring.ts)"]:::client
+        App["Supabase Client"]:::client
+    end
+    
+    subgraph Backend ["Database (Supabase)"]
+        RLS["Row Level Security (RLS)"]:::db
+        SessionsTable[("Sessions Table")]:::db
+        ReportsTable[("Reports Table")]:::db
+    end
+
+    subgraph DocumentFlow ["Document Export"]
+        PDF["Generated PDF Document"]:::ext
+        Hash["SHA-256 Hash"]:::ext
+    end
+    
+    %% Session Tracking Flow
+    UI -->|"User typing, pauses, tab-switches"| SDK
+    SDK -->|"Writing patterns (no text content)"| App
+    
+    %% PDF Hashing Flow
+    UI -->|"1. Export to PDF"| PDF
+    PDF -->|"2. Generate SHA-256 Hash"| Hash
+    Hash -->|"3. Save hash to session"| App
+    
+    %% Data Persistence Flow
+    App -->|"4. Save session data and hash"| RLS
+    RLS -->|"Enforce ownership rules"| SessionsTable
+    App -->|"5. Create verification report"| ReportsTable
+    
+    %% Scoring Process
+    SessionsTable -.->|"Retrieve session metrics"| Scoring
+    Scoring -->|"6. Calculate score (0-100)"| UI
+    
+    %% Verification flow
+    PublicUser["Public Verifier"]:::ext
+    PublicUser -->|"Upload Document & Certificate"| VerifyPage["Verification Tool (Verify.tsx)"]:::client
+    VerifyPage -->|"Extract text and compare hashes"| MatchResult{"Do hashes match?"}:::client
+    MatchResult -->|"Yes"| Valid["Verified Genuine"]:::client
+    MatchResult -->|"No"| Invalid["Verification Failed"]:::client
+    
+    %% Online verification flow (Token gated)
+    PublicUser -->|"Open verification link"| App
+    App -->|"Find report by token"| ReportsTable
+```
+
+### Component Architecture
+
+* **Frontend App**: Provides the writing workspace and runs the tracking and scoring code in the browser.
+* **Tracking SDK (`src/lib/tracking.ts`)**: Monitors browser input events, window focus, and tab visibility to record writing patterns (such as pauses, keystrokes, and copy-paste sizes). It does not log raw text or keystrokes.
+* **Scoring Engine (`src/lib/scoring.ts`)**: Calculates the session score (0-100) using rules based on writing speed, focus time, and the volume of pasted text.
+* **Database (Supabase)**: Stores session metrics and the PDF document hash. Row Level Security (RLS) ensures only the author can access their session details, while allowing public verification using a token.
+
 ## What Effortless Proves
 
 * The document was created through a real writing process.
