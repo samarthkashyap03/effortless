@@ -248,6 +248,51 @@ npm run dev
 
 The application will start on `http://localhost:8080` (or another available port).
 
+## Docker
+
+The application is containerised using a multi-stage Docker build. The builder stage uses Node.js to compile the Vite bundle, and the final image uses Nginx to serve the static output. No Node.js is present in the production image.
+
+### Files
+
+| File | Purpose |
+| --- | --- |
+| `Dockerfile` | Multi-stage build — Node builds the app, Nginx serves it |
+| `docker-compose.yml` | Defines the service, port mapping, and health check |
+| `nginx.conf` | Configures Nginx with SPA fallback routing and asset caching |
+| `.dockerignore` | Excludes `node_modules`, `.env`, and build artifacts from the build context |
+
+### Run with Docker Compose
+
+1. Copy `.env.example` to `.env` and fill in your values
+
+```bash
+cp .env.example .env
+```
+
+2. Build and start the container
+
+```bash
+docker compose up --build
+```
+
+3. Open `http://localhost:8080`
+
+> **Note:** Environment variables (`VITE_*`) are baked into the JavaScript bundle at build time by Vite. If you change any env value, you must rebuild the image with `docker compose up --build`.
+
+### Run with Docker directly
+
+```bash
+docker build \
+  --build-arg VITE_SUPABASE_URL=your_url \
+  --build-arg VITE_SUPABASE_ANON_KEY=your_key \
+  --build-arg VITE_EMAILJS_SERVICE_ID=your_id \
+  --build-arg VITE_EMAILJS_TEMPLATE_ID=your_id \
+  --build-arg VITE_EMAILJS_PUBLIC_KEY=your_key \
+  -t effortless-saas .
+
+docker run -p 8080:80 effortless-saas
+```
+
 ## Scripts
 
 | Command         | Description                  |
